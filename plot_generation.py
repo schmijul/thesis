@@ -47,9 +47,9 @@ if __name__ == '__main__':
     for interpolate_whole_map in [False,True]:
         for random in [False, True]:
                 
-            for length in [ 1000, 2000,3000,4000,5000,6000, 7000,8000,9000,10000]:
+            for length in [100, 1000, 2000,3000,4000,5000,6000, 7000,8000,9000,10000]:
                 
-                for i in [1,2,4,6]:
+                for i in [2,6,4,2,1]:
                     
                     
                 
