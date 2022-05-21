@@ -90,7 +90,7 @@ if __name__ == '__main__':
                         lin_interpol = lin_interpol
                         # Kriging interpolation
                         print('a')
-                        kriging_interpol, kriging_interpol_stacked = kriging_skg(data_i, data_o, verbose=verbose)
+                        kriging_interpol, kriging_interpol_stacked = kriging_skg(data_i, data_o, 10 , verbose=verbose)
                         kriging_interpol=kriging_interpol
                         
                         #kriging_VariogramWithWholeMap, kriging_VariogramWithWholeMap_stacked = kriging_skg(map, data_o, verbose=verbose)

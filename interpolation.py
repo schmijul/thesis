@@ -69,7 +69,7 @@ def grid_interpolation(data_i, data_o,method='linear', verbose=False):
 
         return lin_interpol, lin_interpol_stacked
 
-def kriging(data_i, data_o, type='UK', variogram_model='linear', verbose=False):
+def kriging_pykrige(data_i, data_o, type='UK', variogram_model='linear', verbose=False):
     
             """
             
@@ -114,23 +114,62 @@ def kriging(data_i, data_o, type='UK', variogram_model='linear', verbose=False):
                 print(f' kriging_matrix shape : {kriging_interpol.shape}')
             return kriging_interpol, kriging_interpol_stacked
 
-def kriging_skg(data_i, data_o,verbose=False):
+def kriging_skg(data_i, data_o, mpoints, test_max_points=False, verbose=False):
+        
+        """
+        
+        data_i : known points
+        data_o : unknown points
+        mpoints : maximum number of points to use in the kriging
+        test_max_points : if True, then the maximum number of points is tested and the interpolation with best max pints param is returned
+        
+        """
 
         V = skg.Variogram(data_i[['x', 'y']], data_i['z'], n_lags=10)
         
-        ok_estimate = skg.OrdinaryKriging(V, mode='exact', max_points=10)
         
-        skg_stacked_estimate = ok_estimate.transform(data_o[['x', 'y']])
-        skg_stacked_estimate = pd.DataFrame([skg_stacked_estimate,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose()
-        skg_stacked_estimate.columns = ['z','x','y']
-        skg_stacked_estimate   = skg_stacked_estimate[['x','y','z']]
-        skg_stacked_estimate.index = data_o.index
-
-        skg_estimate = skg_stacked_estimate.pivot_table(index='y', columns='x', values='z')
+        
+        if test_max_points:
+                
+                if verbose:
+                        print('testing max_points')
+                mse = np.Inf
+                
+                for max_points in [8, 10, 20, 30, 40, 50, 80]:
+                        ok = skg.OrdinaryKriging(V, mode='exact', max_points=max_points)  
+                        
+                        skg = ok.transform(data_o[['x', 'y']]) # Kriging interpolation
+        
+        
+        
+                        skg = pd.DataFrame([skg,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
+                        skg.columns = ['z','x','y'] # Fix column names
+                        skg   = skg_stacked[['x','y','z']]
+                        skg.index = data_o.index # Fix index
+                        
+                        mse_mp = np.mean((skg.z - data_o.z)**2) # calc mse to see how max points paramter affects the interpolation
+                        
+                        if  mse_mp < mse : # Find best interpolation
+                                mse = mse_mp
+                                skg_stacked = skg
+        else:
+                ok = skg.OrdinaryKriging(V, mode='exact', max_points=mpoints)  
+                        
+                skg = ok.transform(data_o[['x', 'y']]) # Kriging interpolation   
+                skg = pd.DataFrame([skg,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
+                skg.columns = ['z','x','y'] # Fix column names
+                skg   = skg_stacked[['x','y','z']]
+                skg.index = data_o.index # Fix index
+                skg_stacked = skg
+                
+                
+                       
+        skg_matrix = skg_stacked.pivot_table(index='y', columns='x', values='z')
         
         if verbose:
             print(f' kriging_matrix shape : {skg_estimate.shape}')
-        return skg_estimate, skg_stacked_estimate
+            
+        return skg_matrix, skg_stacked
 
 
 def plot_interpolpoints_on_whole_map(map,stacked_interpolation_matrix):
