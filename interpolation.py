@@ -155,8 +155,11 @@ def kriging_skg(data_i, data_o, mpoints, test_max_points=False, verbose=False):
         else:
                 ok = skg.OrdinaryKriging(V, mode='exact', max_points=mpoints)  
                         
-                skg_result= ok.transform(data_o[['x', 'y']]) # Kriging interpolation   
-                skg_result= pd.DataFrame([skg,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
+                skg_result= ok.transform(data_o[['x', 'y']]) # Kriging interpolation  
+                if verbose:
+                        print(f'skg_result shape : {skg_result.shape}') 
+                skg_result= pd.DataFrame([skg_result,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
+                
                 skg_result.columns = ['z','x','y'] # Fix column names
                 skg_result  = skg_result[['x','y','z']]
                 skg_result.index = data_o.index # Fix index
@@ -167,7 +170,7 @@ def kriging_skg(data_i, data_o, mpoints, test_max_points=False, verbose=False):
         skg_matrix = skg_stacked.pivot_table(index='y', columns='x', values='z')
         
         if verbose:
-            print(f' kriging_matrix shape : {skg_estimate.shape}')
+            print(f' kriging_matrix shape : {skg_matrix.shape}')
             
         return skg_matrix, skg_stacked
 
