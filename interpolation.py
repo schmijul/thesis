@@ -138,14 +138,14 @@ def kriging_skg(data_i, data_o, mpoints, test_max_points=False, verbose=False):
                 for max_points in [8, 10, 20, 30, 40, 50, 80]:
                         ok = skg.OrdinaryKriging(V, mode='exact', max_points=max_points)  
                         
-                        skg = ok.transform(data_o[['x', 'y']]) # Kriging interpolation
+                        skg_result = ok.transform(data_o[['x', 'y']]) # Kriging interpolation
         
         
         
-                        skg = pd.DataFrame([skg,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
-                        skg.columns = ['z','x','y'] # Fix column names
-                        skg   = skg_stacked[['x','y','z']]
-                        skg.index = data_o.index # Fix index
+                        skg_result= pd.DataFrame([skg_result,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
+                        skg_result.columns = ['z','x','y'] # Fix column names
+                        skg_result  = skg_result[['x','y','z']]
+                        skg_result.index = data_o.index # Fix index
                         
                         mse_mp = np.mean((skg.z - data_o.z)**2) # calc mse to see how max points paramter affects the interpolation
                         
@@ -155,12 +155,12 @@ def kriging_skg(data_i, data_o, mpoints, test_max_points=False, verbose=False):
         else:
                 ok = skg.OrdinaryKriging(V, mode='exact', max_points=mpoints)  
                         
-                skg = ok.transform(data_o[['x', 'y']]) # Kriging interpolation   
-                skg = pd.DataFrame([skg,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
-                skg.columns = ['z','x','y'] # Fix column names
-                skg   = skg_stacked[['x','y','z']]
-                skg.index = data_o.index # Fix index
-                skg_stacked = skg
+                skg_result= ok.transform(data_o[['x', 'y']]) # Kriging interpolation   
+                skg_result= pd.DataFrame([skg,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose() # create a DataFrame 
+                skg_result.columns = ['z','x','y'] # Fix column names
+                skg_result  = skg_result[['x','y','z']]
+                skg_result.index = data_o.index # Fix index
+                skg_stacked = skg_result
                 
                 
                        
