@@ -1,0 +1,4 @@
+mse linear interpolation : 0.4909773530705488
+mse kriging interpolation: 2.909551721428611
+mse kriging interpolation with variogram, that gets whole map : 8.409257249655985e-29
+mse NN prediction: 1009.2712922682862

@@ -1,0 +1,7 @@
+description of the data
+sampling is not done randomly
+sampling_distance_x: 4 cm
+sampling_distance_y: 4 cm
+length in y direction : 200 cm 
+amount known points : 198 
+amount unknown points : 160 

@@ -38,27 +38,22 @@ if __name__ == '__main__':
     """
     sampling_distance_y = 12
     sampling_distance_x = 2
-    length = 100
+    length = 10
     epochs = 1500
     verbose = True
     normalize = True
     random = False
     
-    for interpolate_whole_map in [False,True]:
+    for interpolate_whole_map in [False]:#,True]:
         for random in [False, True]:
                 
-            for length in [100, 1000, 2000,3000,4000,5000,6000, 7000,8000,9000,10000]:
+            for length in [ 200, 400, 1000, 2000,3000,4000,5000,6000, 7000,8000,9000,10000]:
                 
-                for i in [2,6,4,2,1]:
+                for i in [4,2,1]:
                     
                     
                 
-                    sampling_distance_y = 12
-                    sampling_distance_x = 2
-
                     
-                    length = length
-
                     if verbose:
                         print(f' amount rows : {length}')
                         print(f' length : {length} cm')
@@ -77,7 +72,7 @@ if __name__ == '__main__':
     
                     """
 
-                    sampling_distance_y = sampling_distance_y *i
+                    sampling_distance_y = 12 *i
                     sampling_distance_x =  i
                     whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
                     map = stack_map(whole_map) # create a stacked map dataframe with columns x, y, z
@@ -166,13 +161,14 @@ if __name__ == '__main__':
                     plt.savefig(f"{path}/lin_interpol_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
                     plt.close()
                     sns.heatmap(data=kriging_interpol,vmin=minval-10, vmax=maxval,cmap='viridis')
-                    plt.savefig("{path}/kriging_interpol_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
+                    plt.savefig(f"{path}/kriging_interpol_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
+                    
                     plt.close()
                     sns.heatmap(data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
-                    plt.savefig("{path}/nn_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
+                    plt.savefig(f"{path}/nn_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
                     plt.close()
                     sns.heatmap(data=kriging_VariogramWithWholeMap,vmin=minval-10, vmax=maxval,cmap='viridis')
-                    plt.savefig("{path}/kriging_VariogramWithWholeMap_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
+                    plt.savefig(f"{path}/kriging_VariogramWithWholeMap_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
                     plt.close()
                     
                     
@@ -233,14 +229,14 @@ if __name__ == '__main__':
 
                     fig, axes = plt.subplots(1, 4, figsize=(20, 8))
 
-                    sns.heatmap(ax=axes[0],data=interpol_error,vmin=min_error, vmax=max_error)
+                    sns.heatmap(ax=axes[0],data=interpol_error,vmin=min_error, vmax=max_error,cmap='viridis')
                     axes[0].set_title='error lin interpol'
-                    sns.heatmap(ax=axes[1],data=krig_error,vmin=min_error, vmax=max_error)
+                    sns.heatmap(ax=axes[1],data=krig_error,vmin=min_error, vmax=max_error,cmap='viridis')
                     axes[1].set_title = 'error kriging ( Variogram with known points)'
                     #sns.heatmap(ax=axes[1],data=kriging_stacked.pivot_table(values='z', index=['y'], columns='x', aggfunc='first'),vmin=minval, vmax=maxval)
-                    sns.heatmap(ax=axes[2],data=kriging_VariogramWithWholeMap_error,vmin=min_error, vmax=max_error)
+                    sns.heatmap(ax=axes[2],data=kriging_VariogramWithWholeMap_error,vmin=min_error, vmax=max_error,cmap='viridis')
                     axes[2].set_title = 'error kriging ( Variogram with whole map)'
-                    sns.heatmap(ax=axes[3],data=nn_error,vmin=min_error,vmax=max_error)
+                    sns.heatmap(ax=axes[3],data=nn_error,vmin=min_error,vmax=max_error,cmap='viridis')
                     axes[3].set_title = 'error NN'
                     plt.legend()
                     
@@ -250,7 +246,7 @@ if __name__ == '__main__':
                         plt.savefig(f'{path_for_plot(i, i,length, random=random)}/Resampling_x{i}cm_y{i}cm_Heatmap_Error_whole_map_interpolated_length{length}cm.png')
 
                     else:
-                        plt.savefig(f'{path_for_plot(i, i,length, random=random)}/Resmapling_x{i}cm_y{i}cm_Heatmap_Error_length{length}cm.png')
+                        plt.savefig(f'{path_for_plot(i, i,length, random=random)}/Resampling_x{i}cm_y{i}cm_Heatmap_Error_length{length}cm.png')
                     plt.close()
 
                     # calc mses

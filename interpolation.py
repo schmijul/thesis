@@ -118,7 +118,7 @@ def kriging_skg(data_i, data_o,verbose=False):
 
         V = skg.Variogram(data_i[['x', 'y']], data_i['z'], n_lags=10)
         
-        ok_estimate = skg.OrdinaryKriging(V, mode='exact')
+        ok_estimate = skg.OrdinaryKriging(V, mode='exact', max_points=10)
         
         skg_stacked_estimate = ok_estimate.transform(data_o[['x', 'y']])
         skg_stacked_estimate = pd.DataFrame([skg_stacked_estimate,data_o['x'].to_numpy(),data_o['y'].to_numpy()]).transpose()
