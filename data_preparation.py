@@ -40,7 +40,7 @@ def cut_map_len(map,tart_point,length):
 
         map = map[map['y'] <= max_y]
         
-        map = map[map['y']> start point]
+        map = map[map['y']> start_point]
         return
 
 def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
