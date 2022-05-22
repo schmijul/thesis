@@ -21,12 +21,12 @@ def stack_map(map):
 
         return map_stacked
 
-def cut_map_len(map,length):
+def cut_map_len(map,tart_point,length):
 
         """
 
         map is supposed to be a stacked dataframe with columns x, y, z
-
+        start_point : smallest y val
         length is the wanted length of the map in cm
 
         12 steps on y axis = 1 cm
@@ -38,7 +38,10 @@ def cut_map_len(map,length):
         length = length * 0.1
         max_y = length *12
 
-        return map[map['y'] <= max_y]
+        map = map[map['y'] <= max_y]
+        
+        map = map[map['y']> start point]
+        return
 
 def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
     

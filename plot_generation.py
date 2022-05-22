@@ -38,7 +38,7 @@ if __name__ == '__main__':
     """
     sampling_distance_y = 12
     sampling_distance_x = 2
-    length = 10
+    length = 500
     epochs = 1500
     verbose = True
     normalize = True
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     for interpolate_whole_map in [False]:#,True]:
         
                 
-            for length in [1000,5000,6000, 7000,8000,9000,10000]:
+            for start_point in in [0,501,1002, 1503,2004,2505,3006]:
                 
                 for i in [6,4,2,1]:
                     for random in [False, True]:
@@ -76,7 +76,7 @@ if __name__ == '__main__':
                         sampling_distance_x =  i
                         whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
                         map = stack_map(whole_map) # create a stacked map dataframe with columns x, y, z
-                        map = cut_map_len(map,length) # cut the map to the length of the map
+                        map = cut_map_len(map,start_point,length) # cut the map to the length of the map
                         data_i, data_o = resample(map, sampling_distance_x, sampling_distance_y) # resample the map
                         if random:
                             # As first random samping approach this will use randomly sampled known coordinates and values to predict the same unknown values
@@ -93,7 +93,9 @@ if __name__ == '__main__':
                         kriging_interpol, kriging_interpol_stacked = kriging_skg(data_i, data_o, 10 , verbose=verbose)
                         kriging_interpol=kriging_interpol
                         
-                        #kriging_VariogramWithWholeMap, kriging_VariogramWithWholeMap_stacked = kriging_skg(map, data_o, verbose=verbose)
+                        #### Next line can cause a lot of trouble as possibly hundres of gb memorry are needed for calc
+                        
+                        kriging_VariogramWithWholeMap, kriging_VariogramWithWholeMap_stacked = kriging_skg(map, data_o,10, verbose=verbose)
                         
 
                         # NN prediction
@@ -167,9 +169,9 @@ if __name__ == '__main__':
                         sns.heatmap(data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
                         plt.savefig(f"{path}/nn_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
                         plt.close()
-                        #sns.heatmap(data=kriging_VariogramWithWholeMap,vmin=minval-10, vmax=maxval,cmap='viridis')
-                        #plt.savefig(f"{path}/kriging_VariogramWithWholeMap_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
-                        #plt.close()
+                        sns.heatmap(data=kriging_VariogramWithWholeMap,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        plt.savefig(f"{path}/kriging_VariogramWithWholeMap_x_{sampling_distance_x}_y_{sampling_distance_y}_length_{length}cm.png")
+                        plt.close()
                         
                         
                         
@@ -198,11 +200,11 @@ if __name__ == '__main__':
                         sns.heatmap(ax=ax4, data=kriging_interpol,vmin=minval-10, vmax=maxval,cmap='viridis')       
                         ax4.set_title(' kriging  ( Variogram with known points)')
                         
-                        #sns.heatmap(ax=ax5, data=kriging_VariogramWithWholeMap,vmin=minval-10, vmax=maxval,cmap='viridis')
-                        #ax5.set_title(' kriging ( Variogram with whole map)')
+                        sns.heatmap(ax=ax5, data=kriging_VariogramWithWholeMap,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        ax5.set_title(' kriging ( Variogram with whole map)')
                         
-                        sns.heatmap(ax=ax5, data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
-                        ax5.set_title(' Base NN')
+                        sns.heatmap(ax=ax6, data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        ax6.set_title(' Base NN')
                         
                         plt.legend()
                     
@@ -219,7 +221,7 @@ if __name__ == '__main__':
 
                         interpol_error = rel_error(lin_interpol,data_o.pivot_table(index='y', columns='x', values='z'))
                         krig_error = rel_error(kriging_interpol,data_o.pivot_table(index='y', columns='x', values='z'))
-                        #kriging_VariogramWithWholeMap_error = rel_error(kriging_VariogramWithWholeMap,data_o.pivot_table(index='y', columns='x', values='z'))
+                        kriging_VariogramWithWholeMap_error = rel_error(kriging_VariogramWithWholeMap,data_o.pivot_table(index='y', columns='x', values='z'))
                         nn_error = rel_error(predictions,data_o.pivot_table(index='y', columns='x', values='z'))
 
 
@@ -234,10 +236,10 @@ if __name__ == '__main__':
                         sns.heatmap(ax=axes[1],data=krig_error,vmin=min_error, vmax=max_error,cmap='viridis')
                         axes[1].set_title = 'error kriging ( Variogram with known points)'
                         #sns.heatmap(ax=axes[1],data=kriging_stacked.pivot_table(values='z', index=['y'], columns='x', aggfunc='first'),vmin=minval, vmax=maxval)
-                        #sns.heatmap(ax=axes[2],data=kriging_VariogramWithWholeMap_error,vmin=min_error, vmax=max_error,cmap='viridis')
-                        #axes[2].set_title = 'error kriging ( Variogram with whole map)'
+                        sns.heatmap(ax=axes[2],data=kriging_VariogramWithWholeMap_error,vmin=min_error, vmax=max_error,cmap='viridis')
+                        axes[2].set_title = 'error kriging ( Variogram with whole map)'
                         sns.heatmap(ax=axes[3],data=nn_error,vmin=min_error,vmax=max_error,cmap='viridis')
-                        axes[2].set_title = 'error NN'
+                        axes[3].set_title = 'error NN'
                         plt.legend()
                         
                         
