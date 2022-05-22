@@ -21,7 +21,7 @@ def stack_map(map):
 
         return map_stacked
 
-def cut_map_len(map,tart_point,length):
+def cut_map_len(map,start_point,length):
 
         """
 
@@ -41,7 +41,7 @@ def cut_map_len(map,tart_point,length):
         map = map[map['y'] <= max_y]
         
         map = map[map['y']> start_point]
-        return
+        return map
 
 def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
     
