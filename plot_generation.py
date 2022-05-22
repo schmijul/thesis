@@ -47,7 +47,7 @@ if __name__ == '__main__':
     for interpolate_whole_map in [False]:#,True]:
         
                 
-            for start_point in in [0,501,1002, 1503,2004,2505,3006]:
+            for start_point in  [0,501,1002, 1503,2004,2505,3006]:
                 
                 for i in [6,4,2,1]:
                     for random in [False, True]:
