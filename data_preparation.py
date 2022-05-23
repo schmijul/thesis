@@ -35,12 +35,13 @@ def cut_map_len(map,start_point,length):
         therefore the length * 0.12 = the length in cm 
         
         """
-        length = length * 0.1
+        #length = length * 0.1
+        length = start_point+length
         max_y = length *12
 
         map = map[map['y'] <= max_y]
         
-        map = map[map['y']> start_point]
+        map = map[map['y']=> start_point*12]
         return map
 
 def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
