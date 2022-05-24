@@ -10,6 +10,10 @@ from data_preparation import *
 from trainNN import *
 import skgstat as skg
 
+def minmax(x,maxval,minval):
+    return np.abs((x-minval)/(maxval-minval))
+def reminmax(x,maxval,minval):
+    return (x*(maxval-minval))+ minval
 
 def build_path(path):
     if not os.path.exists(path):
@@ -109,16 +113,29 @@ if __name__ == '__main__':
                             y_train = y_train/minval
                             y_val = y_val/minval
 
-                        model =  train(x_train, y_train, x_val, y_val,length,build_model(x_train),epochs,sampling_distance_x, sampling_distance_y, verbose=verbose)
-
-                        predictions, pred_stacked = prediction(model,unknown_points, x_val, sampling_distance_x, sampling_distance_y)
+                        
                         
                         if normalize:
+                            
                             predictions = predictions * minval
                             pred_stacked = pred_stacked * minval
+                            maxval = np.max([y_train.max(), y_val.max()])
+                            minval = np.min([y_train.min(), y_val.min()])
+                            y_train = minmax(y_train,maxval,minval)
+                            y_val = minmax(y_val,maxval,minval)
+                            model =  train(x_train, y_train, x_val, y_val,length,build_model(x_train),epochs,sampling_distance_x, sampling_distance_y, verbose=verbose)
+                            predictions, pred_stacked = prediction(model,unknown_points, x_val, sampling_distance_x, sampling_distance_y)
+                            for i in range(x_predictionsval.shape[1]):
+                                predictions[:,i] =  minmax(predictions[:,i],maxval,minval)
+                        
+                            
+                            pred_stacked = reminmax(pred_stacked,maxval, minval)
 
-
-
+                        else:
+                            model =  train(x_train, y_train, x_val, y_val,length,build_model(x_train),epochs,sampling_distance_x, sampling_distance_y, verbose=verbose)
+                            predictions, pred_stacked = prediction(model,unknown_points, x_val, sampling_distance_x, sampling_distance_y)
+                            
+                        
                         # plot the results
                         path = path_for_plot(i, i,start_point, length,random=random)
                         f= open(f"{path}/description_x{i}cm_y{i}cm_length{length}cm.txt","w+")
