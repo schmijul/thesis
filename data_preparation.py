@@ -41,7 +41,7 @@ def cut_map_len(map,start_point,length):
 
         map = map[map['y'] <= max_y]
         
-        map = map[map['y']=> start_point*12]
+        map = map[map['y'] >= start_point*12]
         return map
 
 def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
@@ -52,8 +52,8 @@ def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
         sampling_distance_x : distance between two known points in x direction
         sampling_distance_y : distance between two known points in y direction
         
-        data_i : known points
-        data_o : known points
+        known_points : known points
+        unknown_points : known points
 
         if unknown points are outside the field of known points, then they are ignored
 
@@ -62,8 +62,8 @@ def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
 
         data = map[map['y' ]%(sampling_distance_y/2) == 0]
         # resampling on y axis
-        data_i = data[data['y'] % int(sampling_distance_y) == 0]
-        data_o = data[data['y'] % sampling_distance_y != 0]
+        known_points = data[data['y'] % int(sampling_distance_y) == 0]
+        unknown_points = data[data['y'] % sampling_distance_y != 0]
 
 
         # resampling on x axis
@@ -72,32 +72,32 @@ def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
                 
 
 
-                data_i = data_i[data_i['x'] % int(sampling_distance_x) == 0]
+                known_points = known_points[known_points['x'] % int(sampling_distance_x) == 0]
 
-                data_o = data_o[data_o['x'] % int(sampling_distance_x/2)  == 0 ]
-                data_o =data_o[ data_o['x'] % int(sampling_distance_x) != 0]
+                unknown_points = unknown_points[unknown_points['x'] % int(sampling_distance_x/2)  == 0 ]
+                unknown_points =unknown_points[ unknown_points['x'] % int(sampling_distance_x) != 0]
 
         if verbose:
                 print('cheking if unknown points are outside the field of known points')
                 print('..')
                 print(' ')
 
-        if data_o['x'].max() > data_i['x'].max():
-                data_o = data_o[data_o['x'] != data_o['x'].max()]
+        if unknown_points['x'].max() > known_points['x'].max():
+                unknown_points = unknown_points[unknown_points['x'] != unknown_points['x'].max()]
 
                 if verbose:
                         print('there are unknown points are outside the field of known points on the x axis')
 
-        if data_o['y'].max() > data_i['y'].max(): 
-                data_o = data_o[data_o['y'] != data_o['y'].max()]
+        if unknown_points['y'].max() > known_points['y'].max(): 
+                unknown_points = unknown_points[unknown_points['y'] != unknown_points['y'].max()]
 
                 if verbose:
                         print('there are unknown points are outside the field of known points on the y axis')
 
-        return data_i, data_o
+        return known_points, unknown_points
 
 
-def randomsampling(map,min_x, max_x, min_y, max_y, sampling_distance_x, sampling_distance_y, data_o,verbose=False):
+def randomsampling(map,min_x, max_x, min_y, max_y, sampling_distance_x, sampling_distance_y, unknown_points,verbose=False):
 
         """
 
@@ -105,7 +105,7 @@ def randomsampling(map,min_x, max_x, min_y, max_y, sampling_distance_x, sampling
         min_x : min  x value  coordinates are allowed to take
         max_x : max  x values  coordinates are allowed to take
         min_y : min  y value  coordinates are allowed to take
-        max_y : max  y values  coordinates are allowed to takedata_o : length reference
+        max_y : max  y values  coordinates are allowed to takeunknown_points : length reference
         sampling_distance_x : serves as a x-stepsize indicator to calculate the wished amout of total rows for a comparisson with NonrandomResampling
         sampling_distance_y : serves as a y-stepsize indicator to calculate the wished amout of total rows for a comparisson with NonrandomResampling
 
