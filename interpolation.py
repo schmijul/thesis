@@ -114,7 +114,7 @@ def kriging_pykrige(known_points, unknown_points, type='UK', variogram_model='li
                 print(f' kriging_matrix shape : {kriging_interpol.shape}')
             return kriging_interpol, kriging_interpol_stacked
 
-def kriging_skg(known_points, unknown_points, mpoints, test_max_points=False, verbose=False):
+def kriging_skg(known_points, unknown_points, mpoints=10, test_max_points=False, verbose=False):
         
         """
         
