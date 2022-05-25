@@ -9,6 +9,12 @@ from interpolation import *
 from data_preparation import *
 from trainNN import *
 import skgstat as skg
+from deepkriging import *
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, BatchNormalization
+
+import time
 
 def minmax(x,maxval,minval):
     return np.abs((x-minval)/(maxval-minval))
@@ -42,7 +48,7 @@ if __name__ == '__main__':
     """
     sampling_distance_y = 12
     sampling_distance_x = 2
-    length = 200
+    length = 100
     epochs = 1700
     verbose = True
     normalize = False
@@ -51,9 +57,9 @@ if __name__ == '__main__':
     for interpolate_whole_map in [False]:#,True]:
         
                 
-            for start_point in  [0, 201,402, 603,804,1005,1206, 1400]:
+            for start_point in  [0, 101,202, 303,404,505,606,707,808,909,1010,1111, 1212, 1313]:
                 
-                for i in [6,4,2,1]:
+                for i in [2,6,4,1]:
                     for random in [False, True]:
                         
                     
@@ -96,12 +102,12 @@ if __name__ == '__main__':
                         print('a')
                         kriging_interpol, kriging_interpol_stacked = kriging_skg(known_points, unknown_points, 10 , verbose=verbose)
                         kriging_interpol=kriging_interpol
-                        
+                        time.sleep(180)
                         #### Next line can cause a lot of trouble as possibly hundres of gb memorry are needed for calc
                         
                         #kriging_VariogramWithWholeMap, kriging_VariogramWithWholeMap_stacked = kriging_skg(map, unknown_points,10, verbose=verbose)
-                        
-
+                        deepkrig, deepkrig_stacked = deep_kriging(map, known_points, unknown_points) 
+                        time.sleep(180)
                         # NN prediction
                         x_train = known_points[['x', 'y']]
                         y_train = known_points[['z']]
@@ -176,8 +182,8 @@ if __name__ == '__main__':
                         sns.heatmap(data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
                         plt.savefig(f"{path}/nn_x_{sampling_distance_x}_y_{sampling_distance_y}_from_{start_point}cm_to_{start_point+length}cm.png")
                         plt.close()
-                        #sns.heatmap(data=kriging_VariogramWithWholeMap,vmin=minval-10, vmax=maxval,cmap='viridis')
-                        #plt.savefig(f"{path}/kriging_VariogramWithWholeMap_x_{sampling_distance_x}_y_{sampling_distance_y}_from_{start_point}cm_to_{start_point+length}cm.png")
+                        sns.heatmap(data=deepkrig,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        plt.savefig(f"{path}/deepkriging_x_{sampling_distance_x}_y_{sampling_distance_y}_from_{start_point}cm_to_{start_point+length}cm.png")
                         #plt.close()
                         
                         
@@ -187,12 +193,12 @@ if __name__ == '__main__':
                         
                         
                         plt.figure(figsize=(18,16))
-                        ax1 = plt.subplot2grid((2,3), (0, 1))
-                        ax2 = plt.subplot2grid((2,3), (0, 2))
-                        ax3 = plt.subplot2grid((2,3), (1, 0))
-                        ax4 = plt.subplot2grid((2,3), (1, 1))
-                        ax5 = plt.subplot2grid((2,3), (1, 2))
-                        #ax6 = plt.subplot2grid((2,4), (1, 3))
+                        ax1 = plt.subplot2grid((2,4), (0, 1))
+                        ax2 = plt.subplot2grid((2,4), (0, 2))
+                        ax3 = plt.subplot2grid((2,4), (1, 0))
+                        ax4 = plt.subplot2grid((2,4), (1, 1))
+                        ax5 = plt.subplot2grid((2,4), (1, 2))
+                        ax6 = plt.subplot2grid((2,4), (1, 3))
                         
                         sns.heatmap(ax=ax1,data=map.pivot_table(index='y', columns='x', values='z'),vmin=minval-10, vmax=maxval,cmap='viridis')
                         ax1.plot(known_points['x'], known_points['y'], 'k.', ms=1)
@@ -207,11 +213,11 @@ if __name__ == '__main__':
                         sns.heatmap(ax=ax4, data=kriging_interpol,vmin=minval-10, vmax=maxval,cmap='viridis')       
                         ax4.set_title(' kriging  ( Variogram with known points)')
                         
-                        #sns.heatmap(ax=ax5, data=kriging_VariogramWithWholeMap,vmin=minval-10, vmax=maxval,cmap='viridis')
-                        #ax5.set_title(' kriging ( Variogram with whole map)')
+                        sns.heatmap(ax=ax5, data=deepkrig,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        ax5.set_title(' deep kriging NN')
                         
-                        sns.heatmap(ax=ax5, data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
-                        ax5.set_title(' Base NN')
+                        sns.heatmap(ax=ax6, data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        ax6.set_title(' Base NN')
                         
                         plt.legend()
                     
@@ -236,17 +242,17 @@ if __name__ == '__main__':
                         min_error = np.min([interpol_error.min(), krig_error.min(), nn_error.min()])
 
 
-                        fig, axes = plt.subplots(1, 3, figsize=(20, 8))
+                        fig, axes = plt.subplots(1, 4, figsize=(20, 8))
 
                         sns.heatmap(ax=axes[0],data=interpol_error,vmin=min_error, vmax=max_error,cmap='viridis')
                         axes[0].set_title='error lin interpol'
                         sns.heatmap(ax=axes[1],data=krig_error,vmin=min_error, vmax=max_error,cmap='viridis')
                         axes[1].set_title = 'error kriging ( Variogram with known points)'
                         #sns.heatmap(ax=axes[1],data=kriging_stacked.pivot_table(values='z', index=['y'], columns='x', aggfunc='first'),vmin=minval, vmax=maxval)
-                        #sns.heatmap(ax=axes[2],data=kriging_VariogramWithWholeMap_error,vmin=min_error, vmax=max_error,cmap='viridis')
-                        #axes[2].set_title = 'error kriging ( Variogram with whole map)'
-                        sns.heatmap(ax=axes[2],data=nn_error,vmin=min_error,vmax=max_error,cmap='viridis')
-                        axes[2].set_title = 'error NN'
+                        sns.heatmap(ax=axes[2],data=deepkrig,vmin=min_error, vmax=max_error,cmap='viridis')
+                        axes[2].set_title = 'error deep kriging NN'
+                        sns.heatmap(ax=axes[3],data=nn_error,vmin=min_error,vmax=max_error,cmap='viridis')
+                        axes[3].set_title = 'error NN'
                         plt.legend()
                         
                         
@@ -261,20 +267,20 @@ if __name__ == '__main__':
                         # calc mses
                         mse_lin = np.mean((lin_interpol_stacked['z'] - unknown_points['z']).dropna()**2)
                         mse_kriging = np.mean((kriging_interpol_stacked['z'] - unknown_points['z']).dropna()**2)
-                        #mse_kriging_VariogramWithWholeMap = np.mean((kriging_VariogramWithWholeMap_stacked['z'] - unknown_points['z']).dropna()**2)
+                        mse_deep_kriging = np.mean((deepkrig_stacked['z'] - unknown_points['z']).dropna()**2)
                         mse_nn = np.mean((pred_stacked['z'] - unknown_points['z']).dropna()**2)
                         
                         f= open(f"{path}/mses_x{i}cm_y{i}cm_length{length}cm.txt","a+")
                         if interpolate_whole_map:
                             f.write(f"mse linear interpolation for wholemap : {mse_lin}\n")
                             f.write(f"mse kriging interpolation  for wholemap: {mse_kriging}\n")
-                            #f.write(f"mse kriging interpolation with variogram, that gets  whole map: {mse_kriging_VariogramWithWholeMap}\n")
+                            f.write(f"mse deep kriging NN: for wholemap: {mse_deep_kriging}\n")
                             f.write(f"mse NN prediction for wholemap: {mse_nn}\n")
 
                         else:
                             f.write(f"mse linear interpolation : {mse_lin}\n")
                             f.write(f"mse kriging interpolation: {mse_kriging}\n")
-                            #f.write(f"mse kriging interpolation with variogram, that gets whole map : {mse_kriging_VariogramWithWholeMap}\n")
+                            f.write(f"mse deep kriging NN: {mse_deep_kriging}\n")
                             f.write(f"mse NN prediction: {mse_nn}\n")
                         f.close()
 
