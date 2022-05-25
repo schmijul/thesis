@@ -14,7 +14,10 @@ import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization
 
+<<<<<<< HEAD
 import time
+=======
+>>>>>>> 5857e4a (added deep kriging to plot gen)
 
 def minmax(x,maxval,minval):
     return np.abs((x-minval)/(maxval-minval))
@@ -107,7 +110,11 @@ if __name__ == '__main__':
                         
                         #kriging_VariogramWithWholeMap, kriging_VariogramWithWholeMap_stacked = kriging_skg(map, unknown_points,10, verbose=verbose)
                         deepkrig, deepkrig_stacked = deep_kriging(map, known_points, unknown_points) 
+<<<<<<< HEAD
                         time.sleep(180)
+=======
+
+>>>>>>> 5857e4a (added deep kriging to plot gen)
                         # NN prediction
                         x_train = known_points[['x', 'y']]
                         y_train = known_points[['z']]
