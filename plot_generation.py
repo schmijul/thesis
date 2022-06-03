@@ -9,15 +9,12 @@ from interpolation import *
 from data_preparation import *
 from trainNN import *
 import skgstat as skg
-from deepkriging import *
+import deepkriging as dk
 import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization
 
-<<<<<<< HEAD
 import time
-=======
->>>>>>> 5857e4a (added deep kriging to plot gen)
 
 def minmax(x,maxval,minval):
     return np.abs((x-minval)/(maxval-minval))
@@ -60,7 +57,7 @@ if __name__ == '__main__':
     for interpolate_whole_map in [False]:#,True]:
         
                 
-            for start_point in  [0, 101,202, 303,404,505,606,707,808,909,1010,1111, 1212, 1313]:
+            for start_point in  [707,808,909,1010,1111, 1212, 1313]:
                 
                 for i in [2,6,4,1]:
                     for random in [False, True]:
@@ -109,12 +106,31 @@ if __name__ == '__main__':
                         #### Next line can cause a lot of trouble as possibly hundres of gb memorry are needed for calc
                         
                         #kriging_VariogramWithWholeMap, kriging_VariogramWithWholeMap_stacked = kriging_skg(map, unknown_points,10, verbose=verbose)
-                        deepkrig, deepkrig_stacked = deep_kriging(map, known_points, unknown_points) 
-<<<<<<< HEAD
-                        time.sleep(180)
-=======
+                        
+                        
+                        N = len(map)
+                        num_basis= dk.get_num_basis(N)
+                        map, maxvals, minvals = dk.normalize_data(map)
+                        phi = dk.wendlandkernel(map.x, map.y, num_basis)
+                        dk_model =  dk.build_model(phi.shape[1], verbose=False)
+                        x_train,y_train, x_val, y_val = dk.train_val_split(phi, known_points, unknown_points, verbose=verbose)
+                        name = f'from_{start_point}_to_{length + start_point}_x{sampling_distance_x}_y{sampling_distance_y}_random{random}'
+                        dk_model, dk_hist = train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
+                        dk_prediction = dk.prediction(dk_model, x_val) 
+                        
+                        dk_prediction = dk.reminmax(dk_prediction, maxvals, minvals)
+                        
+                        print(f'skg_result shape : {skg_result.shape}') 
+                        dk_prediction= pd.DataFrame([dk_prediction,unknown_points['x'].to_numpy(),unknown_points['y'].to_numpy()]).transpose() # create a DataFrame 
+                        
+                        dk_prediction.columns = ['z','x','y'] # Fix column names
+                        dk_prediction  = dk_prediction[['x','y','z']]
+                        dk_prediction.index = dk_prediction.index # Fix inde
+                        
+                        dk_prediction_matrix = dk_prediction.pivot_table(index='y', columns='x', values='z')
 
->>>>>>> 5857e4a (added deep kriging to plot gen)
+                        time.sleep(180)
+
                         # NN prediction
                         x_train = known_points[['x', 'y']]
                         y_train = known_points[['z']]
@@ -189,7 +205,7 @@ if __name__ == '__main__':
                         sns.heatmap(data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
                         plt.savefig(f"{path}/nn_x_{sampling_distance_x}_y_{sampling_distance_y}_from_{start_point}cm_to_{start_point+length}cm.png")
                         plt.close()
-                        sns.heatmap(data=deepkrig,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        sns.heatmap(data=dk_prediction_matrix,vmin=minval-10, vmax=maxval,cmap='viridis')
                         plt.savefig(f"{path}/deepkriging_x_{sampling_distance_x}_y_{sampling_distance_y}_from_{start_point}cm_to_{start_point+length}cm.png")
                         #plt.close()
                         
@@ -220,7 +236,7 @@ if __name__ == '__main__':
                         sns.heatmap(ax=ax4, data=kriging_interpol,vmin=minval-10, vmax=maxval,cmap='viridis')       
                         ax4.set_title(' kriging  ( Variogram with known points)')
                         
-                        sns.heatmap(ax=ax5, data=deepkrig,vmin=minval-10, vmax=maxval,cmap='viridis')
+                        sns.heatmap(ax=ax5, data=dk_prediction_matrix,vmin=minval-10, vmax=maxval,cmap='viridis')
                         ax5.set_title(' deep kriging NN')
                         
                         sns.heatmap(ax=ax6, data=predictions,vmin=minval-10, vmax=maxval,cmap='viridis')
@@ -243,7 +259,7 @@ if __name__ == '__main__':
                         krig_error = rel_error(kriging_interpol,unknown_points.pivot_table(index='y', columns='x', values='z'))
                         #kriging_VariogramWithWholeMap_error = rel_error(kriging_VariogramWithWholeMap,unknown_points.pivot_table(index='y', columns='x', values='z'))
                         nn_error = rel_error(predictions,unknown_points.pivot_table(index='y', columns='x', values='z'))
-
+                        dk_error = rel_error(dk_prediction_matrix,unknown_points.pivot_table(index='y', columns='x', values='z'))
 
                         max_error = np.max([interpol_error.max(), krig_error.max(), nn_error.max()])
                         min_error = np.min([interpol_error.min(), krig_error.min(), nn_error.min()])
@@ -256,7 +272,7 @@ if __name__ == '__main__':
                         sns.heatmap(ax=axes[1],data=krig_error,vmin=min_error, vmax=max_error,cmap='viridis')
                         axes[1].set_title = 'error kriging ( Variogram with known points)'
                         #sns.heatmap(ax=axes[1],data=kriging_stacked.pivot_table(values='z', index=['y'], columns='x', aggfunc='first'),vmin=minval, vmax=maxval)
-                        sns.heatmap(ax=axes[2],data=deepkrig,vmin=min_error, vmax=max_error,cmap='viridis')
+                        sns.heatmap(ax=axes[2],data=dk_error,vmin=min_error, vmax=max_error,cmap='viridis')
                         axes[2].set_title = 'error deep kriging NN'
                         sns.heatmap(ax=axes[3],data=nn_error,vmin=min_error,vmax=max_error,cmap='viridis')
                         axes[3].set_title = 'error NN'
@@ -274,8 +290,14 @@ if __name__ == '__main__':
                         # calc mses
                         mse_lin = np.mean((lin_interpol_stacked['z'] - unknown_points['z']).dropna()**2)
                         mse_kriging = np.mean((kriging_interpol_stacked['z'] - unknown_points['z']).dropna()**2)
-                        mse_deep_kriging = np.mean((deepkrig_stacked['z'] - unknown_points['z']).dropna()**2)
+                        mse_deep_kriging = np.mean((dk_prediction['z'] - unknown_points['z']).dropna()**2)
                         mse_nn = np.mean((pred_stacked['z'] - unknown_points['z']).dropna()**2)
+                        
+                        mae_lin = np.mean(np.abs(lin_interpol_stacked['z'] - unknown_points['z']).dropna())
+                        mae_kriging = np.mean(np.abs(kriging_interpol_stacked['z'] - unknown_points['z']).dropna())
+                        mae_deep_kriging = np.mean(np.abs(dk_prediction['z'] - unknown_points['z']).dropna())
+                        mae_nn = np.mean(np.abs(pred_stacked['z'] - unknown_points['z']).dropna())
+                        
                         
                         f= open(f"{path}/mses_x{i}cm_y{i}cm_length{length}cm.txt","a+")
                         if interpolate_whole_map:
@@ -283,12 +305,21 @@ if __name__ == '__main__':
                             f.write(f"mse kriging interpolation  for wholemap: {mse_kriging}\n")
                             f.write(f"mse deep kriging NN: for wholemap: {mse_deep_kriging}\n")
                             f.write(f"mse NN prediction for wholemap: {mse_nn}\n")
+                            
+                            f.write(f"mae linear interpolation for wholemap : {mae_lin}\n")
+                            f.write(f"mae kriging interpolation  for wholemap: {mae_kriging}\n")
+                            f.write(f"mae deep kriging NN: for wholemap: {mae_deep_kriging}\n")
+                            f.write(f"mae NN prediction for wholemap: {mae_nn}\n")
 
                         else:
                             f.write(f"mse linear interpolation : {mse_lin}\n")
                             f.write(f"mse kriging interpolation: {mse_kriging}\n")
                             f.write(f"mse deep kriging NN: {mse_deep_kriging}\n")
                             f.write(f"mse NN prediction: {mse_nn}\n")
+                            f.write(f"mae linear interpolation : {mae_lin}\n")
+                            f.write(f"mae kriging interpolation: {mae_kriging}\n")
+                            f.write(f"mae deep kriging NN: {mae_deep_kriging}\n")
+                            f.write(f"mae NN prediction: {mae_nn}\n")
                         f.close()
 
 
