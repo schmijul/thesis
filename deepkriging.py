@@ -81,12 +81,12 @@ def get_num_basis(N, n_dimensions=2):
     H = 1 + (np.log2( N**(1/n_dimensions) / 10 )) 
     num_basis = []
     for h in range(int(H)):
-            Kh = (9 * 2*+(h-1) + 1 )**n_dimensions
+            Kh = (9 * 2**(h-1) + 1 )**n_dimensions
             num_basis.append(Kh**n_dimensions)
         
     return num_basis
 
-def wendlandkernel(x, y, num_basis, verbose=False):
+def wendlandkernel(x, y,N, num_basis, verbose=False):
     
     """
     _summary_
@@ -111,7 +111,7 @@ def wendlandkernel(x, y, num_basis, verbose=False):
     knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
     ##Wendland kernel
     basis_size = 0
-    phi = np.zeros((N, sum(num_basis)))
+    phi = np.zeros((N, int(sum(num_basis))))
     for res in range(len(num_basis)):
         theta = 1/np.sqrt(num_basis[res])*2.5
         knots_x, knots_y = np.meshgrid(knots_1dx[res],knots_1dy[res])
