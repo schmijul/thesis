@@ -111,7 +111,8 @@ if __name__ == '__main__':
                         N = len(map)
                         num_basis= dk.get_num_basis(N)
                         map, maxvals, minvals = dk.normalize_data(map)
-                        phi = dk.wendlandkernel(map.x, map.y, num_basis)
+                        
+                        phi = dk.wendlandkernel(map.x, map.y,N, num_basis)
                         dk_model =  dk.build_model(phi.shape[1], verbose=False)
                         x_train,y_train, x_val, y_val = dk.train_val_split(phi, known_points, unknown_points, verbose=verbose)
                         name = f'from_{start_point}_to_{length + start_point}_x{sampling_distance_x}_y{sampling_distance_y}_random{random}'
