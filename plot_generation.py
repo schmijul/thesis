@@ -57,7 +57,7 @@ if __name__ == '__main__':
     for interpolate_whole_map in [False]:#,True]:
         
                 
-            for start_point in  [707,808,909,1010,1111, 1212, 1313]:
+            for start_point in  [909,1010,1111, 1212, 1313]:
                 
                 for i in [2,6,4,1]:
                     for random in [False, True]:
@@ -103,20 +103,22 @@ if __name__ == '__main__':
                         kriging_interpol, kriging_interpol_stacked = kriging_skg(known_points, unknown_points, 10 , verbose=verbose)
                         kriging_interpol=kriging_interpol
                         time.sleep(180)
-                        #### Next line can cause a lot of trouble as possibly hundres of gb memorry are needed for calc
                         
-                        #kriging_VariogramWithWholeMap, kriging_VariogramWithWholeMap_stacked = kriging_skg(map, unknown_points,10, verbose=verbose)
-                        
+                       
                         
                         N = len(map)
                         num_basis= dk.get_num_basis(N)
                         map, maxvals, minvals = dk.normalize_data(map)
                         
                         phi = dk.wendlandkernel(map.x, map.y,N, num_basis)
+                        
                         dk_model =  dk.build_model(phi.shape[1], verbose=False)
-                        x_train,y_train, x_val, y_val = dk.train_val_split(phi, known_points, unknown_points, verbose=verbose)
+                        
+                        x_train,y_train, x_val, y_val = dk.train_val_split(phi, known_points, unknown_points, map, verbose=verbose)
+                        print(x_train.shape)
                         name = f'from_{start_point}_to_{length + start_point}_x{sampling_distance_x}_y{sampling_distance_y}_random{random}'
-                        dk_model, dk_hist = train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
+                        
+                        dk_model, dk_hist = dk.train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
                         dk_prediction = dk.prediction(dk_model, x_val) 
                         
                         dk_prediction = dk.reminmax(dk_prediction, maxvals, minvals)

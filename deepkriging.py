@@ -1,8 +1,7 @@
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+
 import os
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization
@@ -84,8 +83,8 @@ def get_num_basis(N, n_dimensions=2):
             Kh = (9 * 2**(h-1) + 1 )**n_dimensions
             num_basis.append(Kh**n_dimensions)
         
-    return num_basis
-
+    #return num_basis
+    return [10**2,19**2,37**2,73**2, 145**2]
 def wendlandkernel(x, y,N, num_basis, verbose=False):
     
     """
@@ -106,6 +105,24 @@ def wendlandkernel(x, y,N, num_basis, verbose=False):
         the code for the wendland kernel was taken from : " https://github.com/aleksada/DeepKriging/blob/master/PM25_application.py "
         
     """
+    
+    
+    ##### Guard #####
+    
+    if not(x.shape == y.shape):
+        print('Error x and y shapes do not match')
+        return False
+    
+    if not ((len(x) != 0) and (len(y != 0))):
+        print('Error empty Data ')
+        return False
+    
+    if not(all(isinstance(x, int) for x in num_basis)):
+        print('Error num_basis does not contain ints')
+        return False
+
+    ##### Function ##### 
+    
     
     knots_1dx = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
     knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
@@ -131,7 +148,7 @@ def wendlandkernel(x, y,N, num_basis, verbose=False):
 
 
 
-def train_val_split(phi, known_points, unknown_points, verbose=False):
+def train_val_split(phi, known_points, unknown_points, map,verbose=False):
     
     """
     _summary_
@@ -140,7 +157,9 @@ def train_val_split(phi, known_points, unknown_points, verbose=False):
             phi (pandas DataFrame): matrix of shape N x number_of_basis_functions prepared with the wendland kernel
             known_points (pandas DataFrame): array of shape N x 3 -> x, y and z values of known points
             unknown_points (pandas DataFrame): array of shape N x 3 -> x, y and vlues of unknown points
+            map ( panda DataFrame) : entire used map, to make ure inde of phi fits inde of map
             verbose (bool): if True, print more information 
+            
         
         Returns:
             in and output for training and validation data
@@ -151,12 +170,27 @@ def train_val_split(phi, known_points, unknown_points, verbose=False):
         It will then uses the index from known and unknown points to split the data into training and validation data.
         
     """
+    ##### Guard #####
+    
+    if not(len(phi) > len(known_points) and len(phi) > len(unknown_points)):
+        print('Error : more known or unkown points than total points')
+        return False
+    
+    
+    if not(len(phi) == len(map)):
+        print('Error : len phi does not match len map')
+        return False
+    
+    
+    
+   ##### Function ##### 
+    
     
     if verbose:
         print(f'max phi index : {phi.index.max()}')
         print(f'max known points index : {known_points.index.max()}')
         print(f'max unknown points index : {unknown_points.index.max()}')
-        
+    phi.index = phi.index + map.index[0]
     train_idx = known_points.loc[known_points.index < phi.index.max()].index 
     val_idx = unknown_points.iloc[unknown_points.index < phi.index.max()].index
     
@@ -224,8 +258,25 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size, 
             train-history as pandas DataFrame
     
     """
-    trainedModelPath = f'trainedModels/deepkriging/{name}/'
+    
+    
+    ##### Guard #####
+    
+    if not((x_train.shape == y_train.shape) and (x_val.shape == y_val.shape )):
+        print('Error x and y shapes do not match')
+        return False
+    
+    if not ((len(x) != 0) and (len(y != 0))):
+        print('Error empty Data ')
+        return False
+    
      
+    
+    ##### Function ##### 
+    
+    
+    trainedModelPath = f'trainedModels/deepkriging/{name}/'
+    
      
     if not os.path.exists(trainedModelPath):
                                 os.makedirs(trainedModelPath)
@@ -258,6 +309,18 @@ def predict(name, x_val):
                 predicted values at validation coordinates
         
     """
+    ##### Guard #####
+    
+    
+    if not (len(x_val != 0)):
+        print('Error : x-val empty')
+        return False
+
+    
+   ##### Function ##### 
+    
+    
+
     model = tf.keras.models.load_model(f'trainedModels/deepkriging/{name}/best_model.h5')
 
 
@@ -269,19 +332,35 @@ if __name__ == '__main__':
     
     print(' Test run')
     print(' ')
-    
+    verbose = False
+    epochs = 10
     sampling_distance_y = 12 *4
     sampling_distance_x =  4
+    length = 10 
+    start_point = 0
     whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     map = stack_map(whole_map) 
-    
+    map = cut_map_len(map,start_point,length) # cut the map to the length of the map
+    known_points, unknown_points = resample(map, sampling_distance_x, sampling_distance_y) # resample the map
+                                          
     map, maxvals, minvals  = normalize_data(map)
+    
     print(map.head())
     
     N = len(map)
     num_basis= get_num_basis(N)
-    
-    phi = wendlandkernel(map.x, map.y, num_basis)
+    print(map.x)
+    print(map.y)
+    phi = wendlandkernel(map.x, map.y,N, num_basis)
     
     print(phi.shape)
+    x_train,y_train, x_val, y_val = train_val_split(phi, known_points, unknown_points,map, verbose=verbose)
+    print(x_train.shape)
+    dk_model =  build_model(phi.shape[1], verbose=True)
     
+    name = 'testrun'
+    
+    dk_model, dk_hist = train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
+    dk_prediction = predict(dk_model, x_val) 
+                        
+    dk_prediction = reminmax(dk_prediction, maxvals, minvals)
