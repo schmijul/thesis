@@ -85,7 +85,7 @@ def get_num_basis(N, n_dimensions=2):
         
     #return num_basis
     return [10**2,19**2,37**2,73**2, 145**2]
-def wendlandkernel(x, y,N, num_basis, verbose=False):
+def wendlandkernel(known_points, unknown_points, N, num_basis, verbose=False):
     
     """
     _summary_
@@ -106,14 +106,9 @@ def wendlandkernel(x, y,N, num_basis, verbose=False):
         
     """
     
-    
-    ##### Guard #####
-    
-    if not(x.shape == y.shape):
-        print('Error x and y shapes do not match')
-        return False
-    
-    if not ((len(x) != 0) and (len(y != 0))):
+    # Checking input Args
+  
+    if not ((len(x) != 0) or (len(y != 0))):
         print('Error empty Data ')
         return False
     
@@ -121,11 +116,14 @@ def wendlandkernel(x, y,N, num_basis, verbose=False):
         print('Error num_basis does not contain ints')
         return False
 
-    ##### Function ##### 
-    
-    
+    # Fct begins here
+    points = pd.concat('known_points, unknown_points')[['x','y']]
+    x = points.x
+    y = points.y
     knots_1dx = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
     knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
+
+
     ##Wendland kernel
     basis_size = 0
     phi = np.zeros((N, int(sum(num_basis))))
@@ -170,9 +168,8 @@ def train_val_split(phi, known_points, unknown_points, map,verbose=False):
         It will then uses the index from known and unknown points to split the data into training and validation data.
         
     """
-    ##### Guard #####
-    
-    if not(len(phi) > len(known_points) and len(phi) > len(unknown_points)):
+   # Checking Input Args
+    if not(len(phi) > len(known_points) or len(phi) > len(unknown_points)):
         print('Error : more known or unkown points than total points')
         return False
     
@@ -182,15 +179,17 @@ def train_val_split(phi, known_points, unknown_points, map,verbose=False):
         return False
     
     
-    
-   ##### Function ##### 
-    
-    
+
+    # Fct begins here
     if verbose:
         print(f'max phi index : {phi.index.max()}')
         print(f'max known points index : {known_points.index.max()}')
         print(f'max unknown points index : {unknown_points.index.max()}')
-    phi.index = phi.index + map.index[0]
+
+    start_index = np.min((known_points.index[0],unknown_points.index[0]))
+    phi.index = phi.index + start_index
+
+
     train_idx = known_points.loc[known_points.index < phi.index.max()].index 
     val_idx = unknown_points.iloc[unknown_points.index < phi.index.max()].index
     
@@ -259,20 +258,23 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size, 
     
     """
     
-    
-    ##### Guard #####
-    
+    """_summary_
+
+    Returns:
+        _type_: _description_
+    """    
+    # Checking input Args
     if not((len(x_train) == len(y_train)) and (len(x_val) == len(y_val))):
         print('Error x and y shapes do not match')
         return False
     
-    if not ((len(x) != 0) and (len(y != 0))):
+    if not ((len(x_train) != 0) or (len(y_train != 0))):
         print('Error empty Data ')
         return False
     
      
     
-    ##### Function ##### 
+    # Fct begins here
     
     
     trainedModelPath = f'trainedModels/deepkriging/{name}/'
@@ -309,7 +311,7 @@ def predict(name, x_val):
                 predicted values at validation coordinates
         
     """
-    ##### Guard #####
+    # Checking input Args
     
     
     if not (len(x_val != 0)):
@@ -317,7 +319,7 @@ def predict(name, x_val):
         return False
 
     
-   ##### Function ##### 
+   # Fct begins here 
     
     
 

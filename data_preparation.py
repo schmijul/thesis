@@ -36,13 +36,26 @@ def cut_map_len(map,start_point,length):
         therefore the length * 0.12 = the length in cm 
         
         """
-        #length = length * 0.1
-        length = start_point+length
-        max_y = length *12
+        
+        # Cheking inputs Args
+        
+        if not (len(map >= start_point+length)):
+                print('length is longer than the map length')
+                return False
+        
+        
+        
+        # Fct begins here
+        
+        
+        end_point = start_point+length # Find endpoint
+        
+        max_y = end_point *12 # Calc to cm
 
         map = map[map['y'] <= max_y]
         
         map = map[map['y'] >= start_point*12]
+        
         return map
 
 def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
@@ -110,9 +123,13 @@ def randomsampling(map, len_sample):
         """
         
         
+        # Checking inputs Args
         
         if not (len(map) >= len_sample):
                 print('sample length is longer than the map length')
                 return False
+        
+        
+        # Fct begins here
         
         return map.iloc[np.random.choice(map.index, size=len_sample]
