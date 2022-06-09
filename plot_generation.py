@@ -27,10 +27,10 @@ def build_path(path):
 
 def path_for_plot(sampling_distance_y, sampling_distance_x,start_point, length,random=False):
     if random:
-        path = f'plots/RandomResampling_x{sampling_distance_x}cm_y{sampling_distance_y}_cm__from_{start_point}cm_to{start_point+length}cm/'
+        path = f'newplots/RandomResampling_x{sampling_distance_x}cm_y{sampling_distance_y}_cm__from_{start_point}cm_to{start_point+length}cm/'
 
     else:
-        path = f'plots/UnifromResampling{sampling_distance_x}cm_y{sampling_distance_y}_cm_from_{start_point}cm_to{start_point+length}cm/'
+        path = f'newplots/UnifromResampling{sampling_distance_x}cm_y{sampling_distance_y}_cm_from_{start_point}cm_to{start_point+length}cm/'
     build_path(path)
     return path
 
@@ -106,11 +106,11 @@ if __name__ == '__main__':
                         
                        
                         
-                        N = len(map)
+                        N = len(known_points) + len(unknown_points) 
                         num_basis= dk.get_num_basis(N)
                         map, maxvals, minvals = dk.normalize_data(map)
                         
-                        phi = dk.wendlandkernel(map.x, map.y,N, num_basis)
+                        phi = dk.wendlandkernel(known_points, unknown_points, num_basis)
                         
                         dk_model =  dk.build_model(phi.shape[1], verbose=False)
                         
@@ -119,7 +119,7 @@ if __name__ == '__main__':
                         name = f'from_{start_point}_to_{length + start_point}_x{sampling_distance_x}_y{sampling_distance_y}_random{random}'
                         
                         dk_model, dk_hist = dk.train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
-                        dk_prediction = dk.prediction(dk_model, x_val) 
+                        dk_prediction = dk.predict(dk_model, x_val) 
                         
                         dk_prediction = dk.reminmax(dk_prediction, maxvals, minvals)
                         

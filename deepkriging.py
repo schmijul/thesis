@@ -79,13 +79,13 @@ def get_num_basis(N, n_dimensions=2):
       
     H = 1 + (np.log2( N**(1/n_dimensions) / 10 )) 
     num_basis = []
-    for h in range(int(H)):
+    for h in range(1,int(H)+1):
             Kh = (9 * 2**(h-1) + 1 )**n_dimensions
             num_basis.append(Kh**n_dimensions)
         
-    #return num_basis
-    return [10**2,19**2,37**2,73**2, 145**2]
-def wendlandkernel(known_points, unknown_points, N, num_basis, verbose=False):
+    return num_basis
+    #return [10**2,19**2,37**2,73**2, 145**2]
+def wendlandkernel(known_points, unknown_points, num_basis, verbose=False):
     
     """
     _summary_
@@ -106,24 +106,26 @@ def wendlandkernel(known_points, unknown_points, N, num_basis, verbose=False):
         
     """
     
-    # Checking input Args
-  
-    if not ((len(x) != 0) or (len(y != 0))):
-        print('Error empty Data ')
-        return False
     
-    if not(all(isinstance(x, int) for x in num_basis)):
-        print('Error num_basis does not contain ints')
-        return False
 
     # Fct begins here
-    points = pd.concat('known_points, unknown_points')[['x','y']]
+    points = pd.concat([known_points, unknown_points])[['x','y']]
+
+    N = len(points)
+
+
     x = points.x
     y = points.y
+    
+    
     knots_1dx = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
     knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
 
 
+    ##Wendland kernel
+   
+    knots_1dx = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
+    knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
     ##Wendland kernel
     basis_size = 0
     phi = np.zeros((N, int(sum(num_basis))))
@@ -131,7 +133,7 @@ def wendlandkernel(known_points, unknown_points, N, num_basis, verbose=False):
         theta = 1/np.sqrt(num_basis[res])*2.5
         knots_x, knots_y = np.meshgrid(knots_1dx[res],knots_1dy[res])
         knots = np.column_stack((knots_x.flatten(),knots_y.flatten()))
-        for i in range(num_basis[res]):
+        for i in range(int(num_basis[res])):
             d = np.linalg.norm(np.vstack((y,x)).T-knots[i,:],axis=1)/theta
             for j in range(len(d)):
                 if d[j] >= 0 and d[j] <= 1:
@@ -155,7 +157,6 @@ def train_val_split(phi, known_points, unknown_points, map,verbose=False):
             phi (pandas DataFrame): matrix of shape N x number_of_basis_functions prepared with the wendland kernel
             known_points (pandas DataFrame): array of shape N x 3 -> x, y and z values of known points
             unknown_points (pandas DataFrame): array of shape N x 3 -> x, y and vlues of unknown points
-            map ( panda DataFrame) : entire used map, to make ure inde of phi fits inde of map
             verbose (bool): if True, print more information 
             
         
@@ -187,7 +188,7 @@ def train_val_split(phi, known_points, unknown_points, map,verbose=False):
         print(f'max unknown points index : {unknown_points.index.max()}')
 
     start_index = np.min((known_points.index[0],unknown_points.index[0]))
-    phi.index = phi.index + start_index
+    phi.index = phi.index + start_index 
 
 
     train_idx = known_points.loc[known_points.index < phi.index.max()].index 
@@ -338,7 +339,7 @@ if __name__ == '__main__':
     epochs = 10
     sampling_distance_y = 12 *4
     sampling_distance_x =  4
-    length = 10 
+    length = 150
     start_point = 0
     whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     map = stack_map(whole_map) 
@@ -347,13 +348,14 @@ if __name__ == '__main__':
                                           
     map, maxvals, minvals  = normalize_data(map)
     
-    print(map.head())
+   
     
-    N = len(map)
-    num_basis= get_num_basis(N)
-    print(map.x)
-    print(map.y)
-    phi = wendlandkernel(map.x, map.y,N, num_basis)
+    
+    
+    N = len(known_points) + len(unknown_points) 
+    num_basis = get_num_basis(N)
+    print(type(num_basis))
+    phi = wendlandkernel(known_points,unknown_points, num_basis)
     
     print(phi.shape)
     x_train,y_train, x_val, y_val = train_val_split(phi, known_points, unknown_points,map, verbose=verbose)
@@ -361,6 +363,9 @@ if __name__ == '__main__':
     dk_model =  build_model(phi.shape[1], verbose=True)
     
     name = 'testrun'
+
+
+    
     
     dk_model, dk_hist = train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
     dk_prediction = predict(dk_model, x_val) 
