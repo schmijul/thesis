@@ -391,10 +391,6 @@ if __name__ == '__main__':
     
     dk_prediction = reminmax(dk_prediction, maxvals['z'], minvals['z'])
     
-    dk_prediction = pd.DataFrame(dk_prediction, unknown_points['x'].to_numpy(), unknown_points['y'].to_numpy())
-    dk_prediction.columns = ['z', 'x', 'y']
-    dk_prediction = dk_prediction[['x','y','z']]
-    dk_prediction.index = unknown_points.index()
-    dk_prediction.to_csv('deepkriging_prediction.csv')
+    np.save('dk_prediction.npy',dk_prediction)
     
-    print(np.mean(np.abs(dk_prediction['z'] - unknown_points['z'])))
+    print(np.mean(np.abs(dk_prediction - unknown_points['z'].to_numpy())))
