@@ -262,7 +262,7 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size, 
     
     ##### Guard #####
     
-    if not((x_train.shape == y_train.shape) and (x_val.shape == y_val.shape )):
+    if not((len(x_train) == len(y_train)) and (len(x_val) == len(y_val))):
         print('Error x and y shapes do not match')
         return False
     
