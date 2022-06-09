@@ -32,7 +32,7 @@ def minmax(x, x_max, x_min):
 def reminmax(x, x_max, x_min):
     return x * (x_max-x_min) + x_min
 
-def normalize_data(map):
+def normalize_data(map, known_points, unknown_points):
     
     """
     _summary_
@@ -48,12 +48,19 @@ def normalize_data(map):
     
     maxvals = {'x': map['x'].max(), 'y': map['y'].max(), 'z': map['z'].max()}
     minvals = {'x': map['x'].min(), 'y': map['y'].min(), 'z': map['z'].min()}
-    
+                                     
+    known_points['x'] = minmax(known_points['x'], maxvals['x'], minvals['x'])
+    known_points['y'] = minmax(known_points['y'], maxvals['y'], minvals['y'])
+    known_points['z'] = minmax(known_points['z'], maxvals['z'], minvals['z'])
+    unknown_points['x'] = minmax(unknown_points['x'], maxvals['x'], minvals['x'])
+    unknown_points['y'] = minmax(unknown_points['y'], maxvals['y'], minvals['y'])
+    unknown_points['z'] = minmax(unknown_points['z'], maxvals['z'], minvals['z'])
+   
     map.x = minmax(map.x, maxvals['x'], minvals['x'])
     map.y = minmax(map.y, maxvals['y'], minvals['y'])
     map.z = minmax(map.z, maxvals['z'], minvals['z'])
     
-    return map, maxvals, minvals
+    return map,known_points, unknown_points, maxvals, minvals
     
 
     
@@ -190,16 +197,22 @@ def train_val_split(phi, known_points, unknown_points, map,verbose=False):
         print(f'max unknown points index : {unknown_points.index.max()}')
 
     start_index = np.min((known_points.index[0],unknown_points.index[0]))
-    phi.index = phi.index + start_index 
-
+   
 
     train_idx = known_points.loc[known_points.index < phi.index.max()].index 
-    val_idx = unknown_points.iloc[unknown_points.index < phi.index.max()].index
+    val_idx = unknown_points.loc[unknown_points.index < phi.index.max()].index
+    
+    """
+        Since phi creation startet with a concatenation of known and unknown points and the index was not reset/sorted the order was still : 
+        first all known points, second all unknown points, there fore first taking the idx for known, then for second can be used here
+    """
+    train_idx = np.asarray([x for x in range(len(known_points))])
+    val_idx = np.asarray([x+len(known_points) for x in range(len(unknown_points))])
     
     x_train = phi.loc[train_idx].to_numpy()
-    y_train = known_points.z.loc[train_idx].to_numpy()
+    y_train = known_points.z.to_numpy()
     x_val = phi.loc[val_idx].to_numpy()
-    y_val = unknown_points.z.loc[val_idx].to_numpy()
+    y_val = unknown_points.z.to_numpy()
 
     return x_train, y_train, x_val, y_val
 
@@ -335,33 +348,36 @@ def predict(name, x_val):
     
 if __name__ == '__main__':
     
-    print(' Test run')
-    print(' ')
+    """This works as a test run for debugging
+    """
     verbose = True
     epochs = 100
-    sampling_distance_y = 12 *4
-    sampling_distance_x =  4
+    sampling_distance_y = 12 * 2
+    sampling_distance_x =  2
     length = 150
     start_point = 0
     whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
-    map = stack_map(whole_map) 
+    map = stack_map(whole_map)
+    map = map.loc[:10000]
+
     #map = cut_map_len(map,start_point,length) # cut the map to the length of the map
+    
     known_points, unknown_points = resample(map, sampling_distance_x, sampling_distance_y) # resample the map
-                                          
-    map, maxvals, minvals  = normalize_data(map)
+                                  
+    map,known_points, unknown_points, maxvals, minvals  = normalize_data(map,known_points, unknown_points)
     
    
-    
-    
-    
     N = len(known_points) + len(unknown_points) 
     num_basis = get_num_basis(N)
-    print(type(num_basis))
+    
+    
     phi = wendlandkernel(known_points,unknown_points, num_basis)
     
-    print(phi.shape)
+    
+    
     x_train,y_train, x_val, y_val = train_val_split(phi, known_points, unknown_points,map, verbose=verbose)
-    print(x_train.shape)
+    
+    
     dk_model =  build_model(phi.shape[1], verbose=True)
     
     name = 'testrun'
@@ -370,12 +386,15 @@ if __name__ == '__main__':
     
     
     dk_model, dk_hist = train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
-    dk_prediction = predict(name, x_val) 
-                        
-    dk_prediction = reminmax(dk_prediction, maxvals, minvals)
+    
+    dk_prediction = predict(name, x_val)[:,0]
+    
+    dk_prediction = reminmax(dk_prediction, maxvals['z'], minvals['z'])
     
     dk_prediction = pd.DataFrame(dk_prediction, unknown_points['x'].to_numpy(), unknown_points['y'].to_numpy())
     dk_prediction.columns = ['z', 'x', 'y']
     dk_prediction = dk_prediction[['x','y','z']]
     dk_prediction.index = unknown_points.index()
     dk_prediction.to_csv('deepkriging_prediction.csv')
+    
+    print(np.mean(np.abs(dk_prediction['z'] - unknown_points['z'])))
