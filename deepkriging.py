@@ -176,11 +176,11 @@ def train_val_split(phi, known_points, unknown_points, map,verbose=False):
         print('Error : more known or unkown points than total points')
         return False
     
-    
+    """
     if not(len(phi) == len(map)):
         print('Error : len phi does not match len map')
         return False
-    
+    """
     
 
     # Fct begins here
@@ -337,8 +337,8 @@ if __name__ == '__main__':
     
     print(' Test run')
     print(' ')
-    verbose = False
-    epochs = 10
+    verbose = True
+    epochs = 100
     sampling_distance_y = 12 *4
     sampling_distance_x =  4
     length = 150
@@ -370,7 +370,7 @@ if __name__ == '__main__':
     
     
     dk_model, dk_hist = train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
-    dk_prediction = predict(dk_model, x_val) 
+    dk_prediction = predict(name, x_val) 
                         
     dk_prediction = reminmax(dk_prediction, maxvals, minvals)
     
