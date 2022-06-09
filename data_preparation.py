@@ -132,4 +132,4 @@ def randomsampling(map, len_sample):
         
         # Fct begins here
         
-        return map.iloc[np.random.choice(map.index, size=len_sample)]
+        return map.loc[np.random.choice(map.index, size=len_sample)]

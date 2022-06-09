@@ -81,10 +81,12 @@ def get_num_basis(N, n_dimensions=2):
     num_basis = []
     for h in range(1,int(H)+1):
             Kh = (9 * 2**(h-1) + 1 )**n_dimensions
-            num_basis.append(Kh**n_dimensions)
+            num_basis.append(int(Kh)**n_dimensions)
         
-    return num_basis
-    #return [10**2,19**2,37**2,73**2, 145**2]
+    #return num_basis
+    return [10**2,19**2,37**2,73**2, 145**2]
+
+
 def wendlandkernel(known_points, unknown_points, num_basis, verbose=False):
     
     """
@@ -343,7 +345,7 @@ if __name__ == '__main__':
     start_point = 0
     whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     map = stack_map(whole_map) 
-    map = cut_map_len(map,start_point,length) # cut the map to the length of the map
+    #map = cut_map_len(map,start_point,length) # cut the map to the length of the map
     known_points, unknown_points = resample(map, sampling_distance_x, sampling_distance_y) # resample the map
                                           
     map, maxvals, minvals  = normalize_data(map)
@@ -371,3 +373,9 @@ if __name__ == '__main__':
     dk_prediction = predict(dk_model, x_val) 
                         
     dk_prediction = reminmax(dk_prediction, maxvals, minvals)
+    
+    dk_prediction = pd.DataFrame(dk_prediction, unknown_points['x'].to_numpy(), unknown_points['y'].to_numpy())
+    dk_prediction.columns = ['z', 'x', 'y']
+    dk_prediction = dk_prediction[['x','y','z']]
+    dk_prediction.index = unknown_points.index()
+    dk_prediction.to_csv('deepkriging_prediction.csv')
