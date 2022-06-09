@@ -6,8 +6,9 @@ def stack_map(map):
         """
 
         make sure all values are float values and not strings
-        Assumption : first column is y, all other columns are x
-
+        
+        Assumption :    first column represents the y axis and the other columns represent the x-axis
+                        There fore the first column ( y-axis) will be used as an index
         """
        
         map = map.astype(float).set_index('Unnamed: 0')
@@ -97,78 +98,21 @@ def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
         return known_points, unknown_points
 
 
-def randomsampling(map,min_x, max_x, min_y, max_y, sampling_distance_x, sampling_distance_y, unknown_points,verbose=False):
+def randomsampling(map, len_sample):
 
         """
-
-        map : dataframe with all values in format x, y, z
-        min_x : min  x value  coordinates are allowed to take
-        max_x : max  x values  coordinates are allowed to take
-        min_y : min  y value  coordinates are allowed to take
-        max_y : max  y values  coordinates are allowed to takeunknown_points : length reference
-        sampling_distance_x : serves as a x-stepsize indicator to calculate the wished amout of total rows for a comparisson with NonrandomResampling
-        sampling_distance_y : serves as a y-stepsize indicator to calculate the wished amout of total rows for a comparisson with NonrandomResampling
-
-        This is still lazy code as the while loop is very inefficient, but for now it works
-
+        _summary_
+                Args:
+                        map (pandas DataFrame) : dataframe with all values in format x, y, z
+                        len_sample (int) : how many rows should the resampled data contain
+                Returns:
+                        map (pandas DataFrame) : dataframe with reasampled values in format x, y, z
         """
         
         
         
-        amount_x_vals = len([x for x in range(int(sampling_distance_x/2),max_x+1,sampling_distance_x)])
-       
-        amount_y_vals = len([x for x in range(int(sampling_distance_y/2),max_y+1,sampling_distance_y)])
-       
-        numrows = amount_x_vals * amount_y_vals
+        if not (len(map) >= len_sample):
+                print('sample length is longer than the map length')
+                return False
         
-        x_vals = np.random.randint(min_x, max_x,int(amount_x_vals))
-
-        y_vals = np.random.randint(min_y, max_y,int(amount_y_vals))
-        
-        
-        sample_map = map.copy().query("x in @x_vals")
-        sample_map = sample_map.query("y in @y_vals")
-       
-        while len(sample_map) <= numrows:
-                
-                if verbose:
-                        
-                        print(f'len sample map != numrows')
-                        print(f'len sample map: {len(sample_map)}')
-                        print(f'numrows: {numrows}')
-                        
-                
-                x_vals = np.random.randint(min_x, max_x,int(1))
-
-                y_vals = np.random.randint(min_y, max_y,int(1))
-        
-                next_sample_map = map.copy().query("x in @x_vals")
-                next_sample_map = next_sample_map.query("y in @y_vals")
-                
-                sample_map = pd.concat([sample_map,next_sample_map]).drop_duplicates(keep='first')
-        
-        
-        
-        while len(sample_map) <= numrows:
-                
-                if verbose:
-                        
-                        print(f'len sample map != numrows')
-                        print(f'len sample map: {len(sample_map)}')
-                        print(f'numrows: {numrows}')
-                        
-                
-                x_vals = np.random.randint(min_x, max_x,int(1))
-
-                y_vals = np.random.randint(min_y, max_y,int(1))
-        
-                next_sample_map = map.copy().query("x in @x_vals")
-                next_sample_map = next_sample_map.query("y in @y_vals")
-                
-                sample_map = pd.concat([sample_map,next_sample_map]).drop_duplicates(keep='first')
-        
-        if len(sample_map) > numrows:
-
-                sample_map=sample_map.iloc[:numrows]
-        return sample_map
-
+        return map.iloc[np.random.choice(map.index, size=len_sample]
