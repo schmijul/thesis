@@ -57,16 +57,16 @@ if __name__ == '__main__':
     for interpolate_whole_map in [False]:#,True]:
         
                 
-            for start_point in  [909,1010,1111, 1212, 1313]:
+            #for start_point in  [909,1010,1111, 1212, 1313]:
                 
-                for i in [2,6,4,1]:
+                for i in [6,4,2,1]:
                     for random in [False, True]:
                         
                     
                         
                         if verbose:
                             print(f' amount rows : {length}')
-                            print(f' length : from {start_point} cm to {start_point + length} cm')
+                            #print(f' length : from {start_point} cm to {start_point + length} cm')
                             print(f' sampling_distance_y in rows : {i*sampling_distance_y}')
                             print(f' sampling_distance_y in cm : {i}')
                             print(f' sampling_distance_x in rows : {i * sampling_distance_x}')
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                         sampling_distance_x =  i
                         whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
                         map = stack_map(whole_map) # create a stacked map dataframe with columns x, y, z
-                        map = cut_map_len(map,start_point,length) # cut the map to the length of the map
+                        #map = cut_map_len(map,start_point,length) # cut the map to the length of the map
                         known_points, unknown_points = resample(map, sampling_distance_x, sampling_distance_y) # resample the map
                         if random:
                             # As first random samping approach this will use randomly sampled known coordinates and values to predict the same unknown values
@@ -102,13 +102,15 @@ if __name__ == '__main__':
                         print('a')
                         kriging_interpol, kriging_interpol_stacked = kriging_skg(known_points, unknown_points, 10 , verbose=verbose)
                         kriging_interpol=kriging_interpol
-                        time.sleep(180)
+                        time.sleep(60) # Let laptop cool down   
                         
                        
-                        
+                        start_point = 0
+                        length = 14
+                        name='KnownAndUnknownPointsAsMap'
                         N = len(known_points) + len(unknown_points) 
                         num_basis= dk.get_num_basis(N)
-                        map, maxvals, minvals = dk.normalize_data(map)
+                        map,known_points, unknown_points, maxvals, minvals = dk.normalize_data(map, known_points, unknown_points)
                         
                         phi = dk.wendlandkernel(known_points, unknown_points, num_basis)
                         
@@ -119,11 +121,11 @@ if __name__ == '__main__':
                         name = f'from_{start_point}_to_{length + start_point}_x{sampling_distance_x}_y{sampling_distance_y}_random{random}'
                         
                         dk_model, dk_hist = dk.train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
-                        dk_prediction = dk.predict(dk_model, x_val) 
+                        dk_prediction = dk.predict(name, x_val) 
                         
-                        dk_prediction = dk.reminmax(dk_prediction, maxvals, minvals)
+                        dk_prediction = dk.reminmax(dk_prediction, maxvals['z'], minvals['z'])
                         
-                        print(f'skg_result shape : {skg_result.shape}') 
+                        
                         dk_prediction= pd.DataFrame([dk_prediction,unknown_points['x'].to_numpy(),unknown_points['y'].to_numpy()]).transpose() # create a DataFrame 
                         
                         dk_prediction.columns = ['z','x','y'] # Fix column names
