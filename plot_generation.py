@@ -49,7 +49,7 @@ if __name__ == '__main__':
     sampling_distance_y = 12
     sampling_distance_x = 2
     length = 100
-    epochs = 1700
+    epochs = 200
     verbose = True
     normalize = False
     random = False
@@ -88,10 +88,12 @@ if __name__ == '__main__':
                         map = stack_map(whole_map) # create a stacked map dataframe with columns x, y, z
                         #map = cut_map_len(map,start_point,length) # cut the map to the length of the map
                         known_points, unknown_points = resample(map, sampling_distance_x, sampling_distance_y) # resample the map
+                        
+                        
                         if random:
                             # As first random samping approach this will use randomly sampled known coordinates and values to predict the same unknown values
-                            known_points = randomsampling(map,known_points['x'].min(),known_points['x'].max(),known_points['y'].min(),known_points['y'].max(),sampling_distance_x, sampling_distance_y,unknown_points,verbose=verbose)
-
+                            known_points = randomsampling(map, len(known_points))
+                        
                         if interpolate_whole_map:
                             unknown_points = map
                         # Lin interpolation
@@ -110,21 +112,24 @@ if __name__ == '__main__':
                         name='KnownAndUnknownPointsAsMap'
                         N = len(known_points) + len(unknown_points) 
                         num_basis= dk.get_num_basis(N)
-                        map,known_points, unknown_points, maxvals, minvals = dk.normalize_data(map, known_points, unknown_points)
                         
-                        phi = dk.wendlandkernel(known_points, unknown_points, num_basis)
+                        
+                        map_dk,known_points_dk, unknown_points_dk, maxvals_dk, minvals_dk = dk.normalize_data(map, known_points, unknown_points)
+                        
+                        phi = dk.wendlandkernel(known_points_dk, unknown_points_dk, num_basis)
                         
                         dk_model =  dk.build_model(phi.shape[1], verbose=False)
                         
-                        x_train,y_train, x_val, y_val = dk.train_val_split(phi, known_points, unknown_points, map, verbose=verbose)
-                        print(x_train.shape)
+                        x_train_dk,y_train_dk, x_val_dk, y_val_dk = dk.train_val_split(phi, known_points_dk, unknown_point_dks, map_dk, verbose=verbose)
+                        
+                       
                         name = f'from_{start_point}_to_{length + start_point}_x{sampling_distance_x}_y{sampling_distance_y}_random{random}'
                         
-                        dk_model, dk_hist = dk.train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
-                        dk_prediction = dk.predict(name, x_val) 
+                        dk_model, dk_hist = dk.train_model(dk_model, x_train_dk, y_train_dk, x_val_dk, y_val_dk, name,epochs, batch_size=100, verbose=verbose)
                         
-                        dk_prediction = dk.reminmax(dk_prediction, maxvals['z'], minvals['z'])
+                        dk_prediction = dk.predict(name, x_val_dk)[:,0]
                         
+                        dk_prediction = dk.reminmax(dk_prediction, maxvals_dk['z'], minvals_dk['z'])
                         
                         dk_prediction= pd.DataFrame([dk_prediction,unknown_points['x'].to_numpy(),unknown_points['y'].to_numpy()]).transpose() # create a DataFrame 
                         
@@ -142,6 +147,7 @@ if __name__ == '__main__':
 
                         x_val = unknown_points[['x', 'y']]
                         y_val = unknown_points[['z']]
+                        
                         if normalize:
                             minval = np.max([y_train.max(), y_val.max()])
                             y_train = y_train/minval
@@ -187,8 +193,8 @@ if __name__ == '__main__':
 
                         f.close()
 
-                        minval =np.min([unknown_points['z'].min(), lin_interpol_stacked['z'].min(), kriging_interpol_stacked['z'].min(), pred_stacked['z'].min()])
-                        maxval = np.max([unknown_points['z'].max(), lin_interpol_stacked['z'].max(), kriging_interpol_stacked['z'].max(), pred_stacked['z'].max()])
+                        minval =np.min([unknown_points['z'].min(), lin_interpol_stacked['z'].min(), kriging_interpol_stacked['z'].min(), pred_stacked['z'].min(), dk_prediction['z'].min()])
+                        maxval = np.max([unknown_points['z'].max(), lin_interpol_stacked['z'].max(), kriging_interpol_stacked['z'].max(), pred_stacked['z'].max(), dk_prediction['z'].max()])
                         
                         
                         
