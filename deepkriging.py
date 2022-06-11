@@ -62,39 +62,87 @@ def normalize_data(map, known_points, unknown_points):
     
     return map,known_points, unknown_points, maxvals, minvals
     
+def calc_H_for_num_basis(N, n_dimensions=2):
+    
+    """
+        _summary_
+
+            Args:
+                N (int) : number of points 
+                n_dimensions (int, optional) : Dimensions of points  Defaults to 2 (x,y).
+
+            Returns:
+                H (float) 
+            
+        _description_
+
+            This Function calculate the H ( Number of Elements in num_basis) descriped in " https://arxiv.org/pdf/2007.11972.pdf " on page 12
 
     
-def get_num_basis(N, n_dimensions=2):
+    
+    """
+    
+    H = 1 + (np.log2( N**(1/n_dimensions) / 10 ))
+    
+    return H
+    
+    
+def get_num_basis(N, H , n_dimensions=2, verbose=False):
       
     """
       _summary_
       
-        Args:
-            N: number of points in the map
-            n_dimensions: number of dimensions of the coordinates
-        
-        Returns:
-            num_basis (list): list of number of basis functions for each dimension
+            Args:
+                N: number of points 
+                n_dimensions: number of dimensions of the coordinates
+            
+            Returns:
+                num_basis (list): list of number of basis functions for each dimension
       
     _description_
-    
-        This function returns a list of number of basis functions for each dimension
-        as descriped in : " https://arxiv.org/pdf/2007.11972.pdf " on page 12
+        
+            This function returns a list of number of basis functions for each dimension
+            as descriped in : " https://arxiv.org/pdf/2007.11972.pdf " on page 12
+            
+            Because the number of basis functions ill become very high for a hugh Data set, this function will also check recursively, 
+            if the number of basis functions is too high and will decrease the number of basis functions until it is below the maximum number of basis functions.
+            
         
     """
-      
-      
-    H = 1 + (np.log2( N**(1/n_dimensions) / 10 )) 
+
+     
     num_basis = []
-    for h in range(1,int(H)+1):
+    
+    for h in range(1,int(H+1)):
+        
             Kh = (9 * 2**(h-1) + 1 )**n_dimensions
             num_basis.append(int(Kh)**n_dimensions)
+            
+    try:
         
-    #return num_basis
-    return [10**2,19**2,37**2,73**2, 145**2]
+        # Create a test variable to see if test variable shape size exceeds memory
+        testVariable = np.zeros((N, int(sum(num_basis))))
+        
+    except MemoryError:
+        
+        if verbose:
+            print('Error : Not enough memory to create basis functions')
+            print('try to reduce H bei 1')
+            
+        get_num_basis(N, H-1 , n_dimensions=2)
+        
+        
+    if verbose:
+        
+        print(np.asanyarray(num_basis).shape)
+    
+    # delete test variable to ensure memory is freed
+    del testVariable 
+    
+    return num_basis
+    
 
-
-def wendlandkernel(known_points, unknown_points, num_basis, verbose=False):
+def wendlandkernel(points, num_basis, verbose=False):
     
     """
     _summary_
@@ -118,7 +166,8 @@ def wendlandkernel(known_points, unknown_points, num_basis, verbose=False):
     
 
     # Fct begins here
-    points = pd.concat([known_points, unknown_points])[['x','y']]
+    
+    
 
     N = len(points)
 
@@ -252,7 +301,7 @@ def build_model(input_dim, verbose=False):
         
     return model
  
-def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size, verbose=False):
+def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size,save_hist=False, verbose=False):
      
     """
      
@@ -308,12 +357,15 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size, 
                         callbacks = create_callback(trainedModelPath),
                         verbose=verbose)
     
-    return model, pd.DataFrame(history.history)
+    if save_hist:
+             pd.DataFrame(history.history).to_csv(f'{trainedModelPath}/{name}_history.csv')
+
+    return model, trainedModelPath
 
      
      
 
-def predict(name, x_val):
+def predict(trainedModelPath, x_val):
     
     
     """
@@ -339,7 +391,7 @@ def predict(name, x_val):
     
     
 
-    model = tf.keras.models.load_model(f'trainedModels/deepkriging/{name}/best_model.h5')
+    model = tf.keras.models.load_model(f'{trainedModelPath}/best_model.h5')
 
 
     return model.predict(x_val)
