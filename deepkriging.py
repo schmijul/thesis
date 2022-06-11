@@ -27,9 +27,11 @@ def create_callback(trainedModelPath,verbose=False):
         ]
         
 def minmax(x, x_max, x_min):
+    
     return (x-x_min)/(x_max-x_min)
 
 def reminmax(x, x_max, x_min):
+    
     return x * (x_max-x_min) + x_min
 
 def normalize_data(map, known_points, unknown_points):
@@ -48,17 +50,15 @@ def normalize_data(map, known_points, unknown_points):
     
     maxvals = {'x': map['x'].max(), 'y': map['y'].max(), 'z': map['z'].max()}
     minvals = {'x': map['x'].min(), 'y': map['y'].min(), 'z': map['z'].min()}
-                                     
-    known_points['x'] = minmax(known_points['x'], maxvals['x'], minvals['x'])
-    known_points['y'] = minmax(known_points['y'], maxvals['y'], minvals['y'])
-    known_points['z'] = minmax(known_points['z'], maxvals['z'], minvals['z'])
-    unknown_points['x'] = minmax(unknown_points['x'], maxvals['x'], minvals['x'])
-    unknown_points['y'] = minmax(unknown_points['y'], maxvals['y'], minvals['y'])
-    unknown_points['z'] = minmax(unknown_points['z'], maxvals['z'], minvals['z'])
+    
+    
+    for col in known_points.columns:
+        
+        known_points[col] = minmax(known_points[col], maxvals[col], minvals[col])
+        unknown_points[col] = minmax(unknown_points[col], maxvals[col], minvals[col])
+        map[col] = minmax(map[col], maxvals[col], minvals[col])
+    
    
-    map.x = minmax(map.x, maxvals['x'], minvals['x'])
-    map.y = minmax(map.y, maxvals['y'], minvals['y'])
-    map.z = minmax(map.z, maxvals['z'], minvals['z'])
     
     return map,known_points, unknown_points, maxvals, minvals
     
@@ -83,17 +83,18 @@ def calc_H_for_num_basis(N, n_dimensions=2):
     """
     
     H = 1 + (np.log2( N**(1/n_dimensions) / 10 ))
-    
+    print(f'H = {H}')
     return H
     
     
-def get_num_basis(N, H , n_dimensions=2, verbose=False):
+def get_numBasis(N, H , n_dimensions=2, verbose=False):
       
     """
       _summary_
       
             Args:
                 N: number of points 
+                H (float) : ( Number of Elements in num_basis) descriped in " https://arxiv.org/pdf/2007.11972.pdf " on page 1
                 n_dimensions: number of dimensions of the coordinates
             
             Returns:
@@ -104,8 +105,6 @@ def get_num_basis(N, H , n_dimensions=2, verbose=False):
             This function returns a list of number of basis functions for each dimension
             as descriped in : " https://arxiv.org/pdf/2007.11972.pdf " on page 12
             
-            Because the number of basis functions ill become very high for a hugh Data set, this function will also check recursively, 
-            if the number of basis functions is too high and will decrease the number of basis functions until it is below the maximum number of basis functions.
             
         
     """
@@ -118,28 +117,59 @@ def get_num_basis(N, H , n_dimensions=2, verbose=False):
             Kh = (9 * 2**(h-1) + 1 )**n_dimensions
             num_basis.append(int(Kh)**n_dimensions)
             
-    try:
-        
-        # Create a test variable to see if test variable shape size exceeds memory
-        testVariable = np.zeros((N, int(sum(num_basis))))
-        
-    except MemoryError:
-        
-        if verbose:
-            print('Error : Not enough memory to create basis functions')
-            print('try to reduce H bei 1')
-            
-        get_num_basis(N, H-1 , n_dimensions=2)
-        
-        
-    if verbose:
-        
-        print(np.asanyarray(num_basis).shape)
-    
-    # delete test variable to ensure memory is freed
-    del testVariable 
-    
     return num_basis
+
+def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
+    
+    """
+    _summary_
+
+        Args:
+            N (int) : number of points 
+            H (float) : ( Number of Elements in num_basis) descriped in " https://arxiv.org/pdf/2007.11972.pdf " on page 1
+            n_dimensions (int, optional) : Dimensions of points  Defaults to 2 (x,y).
+            verbose (bool): show info about recursion
+    
+        Returns:
+            num_basis (list): list of number of basis functions for each dimension
+    
+    _description_
+            Because the number of basis functions will become very high for a hugh Data set, this function will check recursively, 
+            if the number of basis functions is too high and will decrease the number of basis functions until it is below the maximum number of basis functions.
+            
+    """
+    
+    # Create ArrayMemoryError class to catch a custom exception (ArrayMemoryError is a numpy specific exception)
+    class ArrayMemoryError(Exception):
+            pass
+    
+    try: 
+        
+        
+        numBasis = get_numBasis(N, H, n_dimensions, verbose)
+        
+        print(N)
+        print(int(sum(numBasis)))
+        
+        testVariable = np.zeros((N, int(sum(numBasis))))
+        print(type(testVariable))
+                
+            
+    except np.core._exceptions._ArrayMemoryError:
+        
+                   
+            if verbose:
+                    print('Error : Not enough memory to create basis functions')
+                    print('try to reduce H bei 1')
+                    
+            numBasis = get_numBasis(N, (H-1) , n_dimensions=2)
+    
+    
+    return numBasis
+    
+    
+   
+            
     
 
 def wendlandkernel(points, num_basis, verbose=False):
@@ -239,7 +269,7 @@ def train_val_split(phi, known_points, unknown_points, map,verbose=False):
     """
     
 
-    # Fct begins here
+    # Fct begins here 
     if verbose:
         print(f'max phi index : {phi.index.max()}')
         print(f'max known points index : {known_points.index.max()}')
@@ -323,11 +353,7 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size,s
     
     """
     
-    """_summary_
-
-    Returns:
-        _type_: _description_
-    """    
+       
     # Checking input Args
     if not((len(x_train) == len(y_train)) and (len(x_val) == len(y_val))):
         print('Error x and y shapes do not match')
@@ -397,52 +423,4 @@ def predict(trainedModelPath, x_val):
     return model.predict(x_val)
     
     
-    
-if __name__ == '__main__':
-    
-    """This works as a test run for debugging
-    """
-    verbose = True
-    epochs = 100
-    sampling_distance_y = 12 * 2
-    sampling_distance_x =  2
-    length = 150
-    start_point = 0
-    whole_map = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
-    map = stack_map(whole_map)
-    map = map.loc[:10000]
-
-    #map = cut_map_len(map,start_point,length) # cut the map to the length of the map
-    
-    known_points, unknown_points = resample(map, sampling_distance_x, sampling_distance_y) # resample the map
-                                  
-    map,known_points, unknown_points, maxvals, minvals  = normalize_data(map,known_points, unknown_points)
-    
-   
-    N = len(known_points) + len(unknown_points) 
-    num_basis = get_num_basis(N)
-    
-    
-    phi = wendlandkernel(known_points,unknown_points, num_basis)
-    
-    
-    
-    x_train,y_train, x_val, y_val = train_val_split(phi, known_points, unknown_points,map, verbose=verbose)
-    
-    
-    dk_model =  build_model(phi.shape[1], verbose=True)
-    
-    name = 'testrun'
-
-
-    
-    
-    dk_model, dk_hist = train_model(dk_model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100, verbose=verbose)
-    
-    dk_prediction = predict(name, x_val)[:,0]
-    
-    dk_prediction = reminmax(dk_prediction, maxvals['z'], minvals['z'])
-    
-    np.save('dk_prediction.npy',dk_prediction)
-    
-    print(np.mean(np.abs(dk_prediction - unknown_points['z'].to_numpy())))
+ 
