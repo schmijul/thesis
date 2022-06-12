@@ -2,6 +2,7 @@ plots/
 newplots/
 trainedModel/
 trainedModels/
+predictions/
 __pycache__/
 *.py[cod]
 # Distribution / packaging
@@ -18,7 +19,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-
+*.npy
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
