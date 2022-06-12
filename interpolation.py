@@ -16,9 +16,15 @@ def grid_interpolation(known_points, unknown_points,method='linear', verbose=Fal
         known_points : known points
         unknown_points : unknown points
         method  ['linear', 'nearest', 'cubic']
-        fillnans : if True, then NaN values are replaced with 0
+        
 
         """
+        # Checking input Args
+        
+        if not( (known_points.columns.tolist() == ['x', 'y', 'z']) or (unknown_points.columns.tolist() == ['x', 'y', 'z']) ):
+                print('Error: known_points and unknown_points must have columns x, y, z')
+                return False
+
 
         x = unknown_points['x']
         y = unknown_points['y']
@@ -67,7 +73,7 @@ def grid_interpolation(known_points, unknown_points,method='linear', verbose=Fal
         lin_interpol_stacked.columns = ['y', 'x', 'z']
         lin_interpol_stacked = lin_interpol_stacked[['x', 'y', 'z']]
 
-        return lin_interpol, lin_interpol_stacked
+        return lin_interpol_stacked
 
 def kriging_pykrige(known_points, unknown_points, type='UK', variogram_model='linear', verbose=False):
     
@@ -81,7 +87,7 @@ def kriging_pykrige(known_points, unknown_points, type='UK', variogram_model='li
             method : Variogram type
 
             """
-
+            
             if type == 'UK':
                 K = UniversalKriging(
                                         known_points['x'].astype(float),
@@ -117,16 +123,32 @@ def kriging_pykrige(known_points, unknown_points, type='UK', variogram_model='li
 def kriging_skg(known_points, unknown_points, mpoints=10, test_max_points=False, verbose=False):
         
         """
+        _summary_
         
-        known_points : known points
-        unknown_points : unknown points
-        mpoints : maximum number of points to use in the kriging
-        test_max_points : if True, then the maximum number of points is tested and the interpolation with best max pints param is returned
-        
+                Args:
+                        known_points (pandas DataFrame) : known points in format x, y, z
+                        
+                        unknown_points (pandas DataFrame) : unknown points in format x, y, z
+                        
+                        mpoints (int) : max number of points the kriging model is allowed to consider for interpolation of one point
+                        
+                        test_max_points (bool) : if True, the kriging model is tested with a range of mpoints values and the best one is chosen
+       
+                Returns:
+                        
+                        skg_stacked (pandas DataFrame) : stacked dataframe with interpolated values and coordinates in format x, y, z
         """
 
-        V = skg.Variogram(known_points[['x', 'y']], known_points['z'], n_lags=10)
+
+
+        # Checking input Args
         
+        if not( (known_points.columns.tolist() == ['x', 'y', 'z']) or (unknown_points.columns.tolist() == ['x', 'y', 'z']) ):
+                print('Error: known_points and unknown_points must have columns x, y, z')
+                return False
+        
+        
+        V = skg.Variogram(known_points[['x', 'y']], known_points['z'], n_lags=10)
         
         
         if test_max_points:
@@ -156,8 +178,7 @@ def kriging_skg(known_points, unknown_points, mpoints=10, test_max_points=False,
                 ok = skg.OrdinaryKriging(V, mode='exact', max_points=mpoints)  
                         
                 skg_result= ok.transform(unknown_points[['x', 'y']]) # Kriging interpolation  
-                if verbose:
-                        print(f'skg_result shape : {skg_result.shape}') 
+                
                 skg_result= pd.DataFrame([skg_result,unknown_points['x'].to_numpy(),unknown_points['y'].to_numpy()]).transpose() # create a DataFrame 
                 
                 skg_result.columns = ['z','x','y'] # Fix column names
@@ -167,12 +188,8 @@ def kriging_skg(known_points, unknown_points, mpoints=10, test_max_points=False,
                 
                 
                        
-        skg_matrix = skg_stacked.pivot_table(index='y', columns='x', values='z')
         
-        if verbose:
-            print(f' kriging_matrix shape : {skg_matrix.shape}')
-            
-        return skg_matrix, skg_stacked
+        return  skg_stacked
 
 
 def plot_interpolpoints_on_whole_map(map,stacked_interpolation_matrix):
@@ -195,4 +212,3 @@ def plot_interpolpoints_on_whole_map(map,stacked_interpolation_matrix):
     
     return stacked_interpolation_matrix_with_whole_map, stacked_interpolation_matrix_with_whole_map_stacked
         
-
