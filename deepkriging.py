@@ -93,7 +93,7 @@ def get_numBasis(N, H , n_dimensions=2, verbose=False):
       _summary_
       
             Args:
-                N: number of points 
+                N (int) : number of points 
                 H (float) : ( Number of Elements in num_basis) descriped in " https://arxiv.org/pdf/2007.11972.pdf " on page 1
                 n_dimensions: number of dimensions of the coordinates
             
@@ -110,14 +110,14 @@ def get_numBasis(N, H , n_dimensions=2, verbose=False):
     """
 
      
-    num_basis = []
+    numBasis = []
     
     for h in range(1,int(H+1)):
-        
-            Kh = (9 * 2**(h-1) + 1 )**n_dimensions
-            num_basis.append(int(Kh)**n_dimensions)
+            print(h)
+            Kh = (9 * 2**(h-1) + 1 )
+            numBasis.append(int(Kh)**n_dimensions)
             
-    return num_basis
+    return numBasis
 
 def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
     
@@ -178,8 +178,7 @@ def wendlandkernel(points, num_basis, verbose=False):
     _summary_
     
         Args:
-            x (array): x-coordinates of point
-            y (array): y-coordinates of point
+            points (pandas DataFrame) : cordinnates in format x, y
             num_bais (int): number of basis functions
         Returns:
             phi (pandas DataFrame): matrix of shape N x number_of_basis_functions
@@ -208,26 +207,32 @@ def wendlandkernel(points, num_basis, verbose=False):
     
     knots_1dx = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
     knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
-
-
+    
     ##Wendland kernel
-   
-    knots_1dx = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
-    knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in num_basis]
-    ##Wendland kernel
+    
     basis_size = 0
     phi = np.zeros((N, int(sum(num_basis))))
+    
     for res in range(len(num_basis)):
+
         theta = 1/np.sqrt(num_basis[res])*2.5
         knots_x, knots_y = np.meshgrid(knots_1dx[res],knots_1dy[res])
         knots = np.column_stack((knots_x.flatten(),knots_y.flatten()))
+        
         for i in range(int(num_basis[res])):
+            
             d = np.linalg.norm(np.vstack((y,x)).T-knots[i,:],axis=1)/theta
+            
             for j in range(len(d)):
+                
                 if d[j] >= 0 and d[j] <= 1:
+                    
                     phi[j,i + basis_size] = (1-d[j])**6 * (35 * d[j]**2 + 18 * d[j] + 3)/3
+                    
                 else:
+                    
                     phi[j,i + basis_size] = 0
+                    
         basis_size = basis_size + num_basis[res]
 
     return pd.DataFrame(phi)
@@ -331,7 +336,7 @@ def build_model(input_dim, verbose=False):
         
     return model
  
-def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size,save_hist=False, verbose=False):
+def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size=100,save_hist=False, verbose=False):
      
     """
      
@@ -423,4 +428,16 @@ def predict(trainedModelPath, x_val):
     return model.predict(x_val)
     
     
- 
+if __name__ == '__main__':
+    
+    
+    N = 900
+    H = 4
+    
+    numBasis = findWorkingNumBasis(N,H)
+    print(numBasis)
+    expected =  [10**2,19**2,37**2,73**2]
+    print(expected)
+    
+    if numBasis == expected:
+        print('Test passed')
