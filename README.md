@@ -25,4 +25,15 @@ To Run it type:
 If everything works pytest will show something like this:
 
 ![alt text](pictures/pytest.png "Title")
+
+
+## Generate Heatmaps and calculate Erros
+
+The script main.py will perfom Linear Interpolation, Kriging and it will also train a deep Kriging Model and a Base Model with around 2 mio trainable parameters.
+
+It will then plot the results on Heatmaps and will calculate the MAE and the MSE for each interpolation/prediction and store them in a txt file.
+
+to Run it type:
+
+    python3 main.py
     
