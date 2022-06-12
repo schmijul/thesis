@@ -58,6 +58,35 @@ def cut_map_len(map,start_point,length):
         
         return map
 
+def prepare_map(wholeMap,start_point=0, length=None):
+        
+        """
+        _summary_
+                Args:
+                        wholeMap (pandas DataFrame) : dataframe where first column represents the y axis and the other columns represent the x-axis
+        
+                        start_point (int) : smallest y val
+                        length (int) : length of the map in cm, if length is None, then the whole map is used
+
+                Returns:
+                        map (pandas DataFrame) : dataframe with reasampled values in format x, y, z
+                        
+                        wholeMap (pandas DataFrame) : dataframe where first column represents the y axis and the other columns represent the x-axis
+        
+
+       
+        """
+        
+        map = stack_map(wholeMap)
+        
+        if length:
+                map = cut_map_len(map,start_point,length)
+        
+        wholeMap = map.pivot_table(index='y', columns='x', values='z')
+        
+        return wholeMap, map
+
+
 def resample(map, sampling_distance_x, sampling_distance_y, verbose=False):
     
         """
@@ -116,8 +145,8 @@ def randomsampling(map, len_sample):
         """
         _summary_
                 Args:
-                        map (pandas DataFrame) : dataframe with all values in format x, y, z
-                        len_sample (int) : how many rows should the resampled data contain
+                        map (pandas DataFrame) :  _description_ dataframe with all values in format x, y, z
+                        len_sample (int) :  _description_ how many rows should the resampled data contain
                 Returns:
                         map (pandas DataFrame) : dataframe with reasampled values in format x, y, z
         """
