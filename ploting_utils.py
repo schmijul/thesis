@@ -51,8 +51,7 @@ def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap=
     
     plt.legend()
     
-    return plt.show()
-                
+          
 
 def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'): 
     
@@ -76,8 +75,6 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
     maxval = 0
     
     keys = list(data.keys())
-    print(len(keys))
-    
     
     figsize=(4*len(keys),16)
     
@@ -115,7 +112,6 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
     
     plt.legend()
     
-    return plt.show()
     
     
                   
@@ -168,9 +164,9 @@ if __name__ == '__main__':
 
     known_points, unknown_points = dp.resample(StackedMap.copy(), sampling_distance_x, sampling_distance_y)
     
+    path='plot.png'
     
     
+    generateHeatMaps({'test':unknown_points, 'test2':unknown_points}, StackedMap, known_points, unknown_points,path)
     
-    generateHeatMaps({'test':unknown_points, 'test2':unknown_points}, StackedMap, known_points, unknown_points)
     
-    plt.show()
