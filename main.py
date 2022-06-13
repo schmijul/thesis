@@ -72,7 +72,7 @@ def main():
     ## Kriging 
     
     
-    ResultKriging = ip.kriging_skg(known_points.copy(), unknown_points, 10 )
+    ResultKriging = ip.kriging_skg(known_points.copy(), unknown_points.copy(), 10 )
     
                         
     # Deep Learning
@@ -184,7 +184,7 @@ def main():
         pu.generateHeatMaps({key:data[key]},StackedMap, known_points, unknown_points, path +f'{key}.png')
         
         
-    pu.generateHeatMaps(data,StackedMap, unknown_points, known_points, path+'heatmaps.png')
+    pu.generateHeatMaps(data,StackedMap, known_points,unknown_points, path+'heatmaps.png')
     
 
 
@@ -221,5 +221,6 @@ if __name__ == "__main__":
                 
             
             main()
+            
     
     print('fin')
