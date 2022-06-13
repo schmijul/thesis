@@ -33,7 +33,7 @@ def mae(y_true, y_pred):
     return np.mean(np.abs(y_true - y_pred))
 
 def mse(y_true, y_pred):
-    return np.mean(np.square(y_true - y_pred)**2)
+    return np.mean(np.square(y_true - y_pred))
 
 def main():
     
@@ -151,22 +151,26 @@ def main():
     
     
     f= open(f"{path}/error.txt","a+")
+    
     f.write(f"{scenario}\n")
+    f.write('\n')
+    f.write('\n')
     
     f.write('MAEs: \n')
     for key, value in maes.items(): 
 
         f.write('%s:%s\n' % (key, value))
 
-    
+    f.write('\n')
     #f.write(f"{maes}\n")
     
     f.write('MSES: \n')
+    
     for key, value in mses.items(): 
 
         f.write('%s:%s\n' % (key, value))
 
-    
+    f.write('\n')
     #f.write(f"{mses}\n")
     
     
@@ -189,7 +193,7 @@ if __name__ == "__main__":
     
     
     verbose = 1
-    epochs = 2000
+    epochs = 3000
     
     start_point=0
     length = None
@@ -204,12 +208,12 @@ if __name__ == "__main__":
     sampling_distance_y = 4 * 12
     
     # Name scenario ( for saving directories)
-    for random in [True, False]:
+    random = 0
         
-        scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_random-{random}'
+    scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_random-{random}'
         
         
         
-        main()
+    main()
     
     print('fin')
