@@ -113,7 +113,7 @@ def get_numBasis(N, H , n_dimensions=2, verbose=False):
     numBasis = []
     
     for h in range(1,int(H+1)):
-            print(h)
+
             Kh = (9 * 2**(h-1) + 1 )
             numBasis.append(int(Kh)**n_dimensions)
             
