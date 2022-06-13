@@ -9,7 +9,7 @@ import tensorflow as tf
 from data_preparation import *
 
 
-def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
+def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
     
         """
         quick function to create callbacks and or overwrite existing callbacks
@@ -31,7 +31,7 @@ def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
         
         if EarlyStopping:
             callbacks.append(tf.keras.callbacks.EarlyStopping(monitor="val_loss", 
-                                                              patience=150, 
+                                                              patience=200, 
                                                               verbose=verbose))
             
         return callbacks
@@ -325,7 +325,7 @@ def build_model(input_dim, verbose=False):
     """
     
     model = Sequential()
-    model.add(Dense(100, input_dim = input_dim,  kernel_initializer='he_uniform', activation='relu'))
+    model.add(Dense(1000, input_dim = input_dim,  kernel_initializer='he_uniform', activation='relu'))
     model.add(Dropout(rate=0.5))
     model.add(BatchNormalization())
     model.add(Dense(100, activation='relu'))

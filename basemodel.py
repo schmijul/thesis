@@ -6,7 +6,7 @@ from keras.wrappers.scikit_learn import KerasRegressor
 import pandas as pd
 
 
-def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
+def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
     
         """
         quick function to create callbacks and or overwrite existing callbacks
@@ -22,7 +22,7 @@ def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
             ),
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_loss", 
-                factor=0.5, patience=20, 
+                factor=0.5, patience=200, 
                 in_lr=0.0001
             )]
         
