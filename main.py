@@ -189,8 +189,8 @@ if __name__ == "__main__":
     
     
     verbose = 1
-    epochs = 1000
-    random = 0
+    epochs = 2000
+    
     start_point=0
     length = None
     interpolate_whole_map = 0
@@ -204,11 +204,12 @@ if __name__ == "__main__":
     sampling_distance_y = 4 * 12
     
     # Name scenario ( for saving directories)
-    
-    scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}'
-    
-    
-    
-    main()
+    for random in [True, False]:
+        
+        scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_random-{random}'
+        
+        
+        
+        main()
     
     print('fin')

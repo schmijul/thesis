@@ -148,11 +148,11 @@ def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
         
         numBasis = get_numBasis(N, H, n_dimensions, verbose)
         
-        print(N)
-        print(int(sum(numBasis)))
+        
         
         testVariable = np.zeros((N, int(sum(numBasis))))
-        print(type(testVariable))
+        
+        
                 
             
     except np.core._exceptions._ArrayMemoryError:
@@ -162,7 +162,7 @@ def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
                     print('Error : Not enough memory to create basis functions')
                     print('try to reduce H bei 1')
                     
-            numBasis = get_numBasis(N, (H-1) , n_dimensions=2)
+            numBasis = findWorkingNumBasis(N, (H-1) , n_dimensions=2)
     
     
     return numBasis
