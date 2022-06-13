@@ -208,9 +208,15 @@ if __name__ == "__main__":
     sampling_distance_y = 4 * 12
     
     # Name scenario ( for saving directories)
-    random = 0
+    random = True
+    
+    if random:
         
-    scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_random-{random}'
+        scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_RandomSampling'
+        
+    else:
+        
+        scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_UniformSampling'
         
         
         
