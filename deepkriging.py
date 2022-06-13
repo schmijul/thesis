@@ -9,22 +9,32 @@ import tensorflow as tf
 from data_preparation import *
 
 
-def create_callback(trainedModelPath,verbose=False):
+def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
     
         """
         quick function to create callbacks and or overwrite existing callbacks
         
         """
         
-        return  [
+        callbacks=  [
             tf.keras.callbacks.ModelCheckpoint(
-                trainedModelPath+"/best_model.h5", save_best_only=True, monitor="val_loss", verbose=verbose
+                trainedModelPath+"/best_model.h5", 
+                save_best_only=True, 
+                monitor="val_loss", 
+                verbose=verbose
             ),
             tf.keras.callbacks.ReduceLROnPlateau(
-                monitor="val_loss", factor=0.5, patience=20, min_lr=0.0001
-            )
+                monitor="val_loss", 
+                factor=0.5, patience=20, 
+                in_lr=0.0001
+            )]
+        
+        if EarlyStopping:
+            callbacks.append(tf.keras.callbacks.EarlyStopping(monitor="val_loss", 
+                                                              patience=150, 
+                                                              verbose=verbose))
             
-        ]
+        return callbacks
         
 def minmax(x, x_max, x_min):
     

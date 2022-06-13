@@ -4,21 +4,34 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization
 from keras.wrappers.scikit_learn import KerasRegressor
 import pandas as pd
-def create_callback(trainedModelPath,verbose=False):
 
-    """
-    quick function to create callbacks and or overwrite existing callbacks
+
+def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
     
-    """
-    
-    return  [
-        tf.keras.callbacks.ModelCheckpoint(
-            trainedModelPath+"/best_model.h5", save_best_only=True, monitor="val_loss", verbose=verbose
-        ),
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss", factor=0.5, patience=20, min_lr=0.0001
-        )
-    ]
+        """
+        quick function to create callbacks and or overwrite existing callbacks
+        
+        """
+        
+        callbacks=  [
+            tf.keras.callbacks.ModelCheckpoint(
+                trainedModelPath+"/best_model.h5", 
+                save_best_only=True, 
+                monitor="val_loss", 
+                verbose=verbose
+            ),
+            tf.keras.callbacks.ReduceLROnPlateau(
+                monitor="val_loss", 
+                factor=0.5, patience=20, 
+                in_lr=0.0001
+            )]
+        
+        if EarlyStopping:
+            callbacks.append(tf.keras.callbacks.EarlyStopping(monitor="val_loss", 
+                                                              patience=150, 
+                                                              verbose=verbose))
+            
+        return callbacks
     
     
 def build_model(verbose=False):
