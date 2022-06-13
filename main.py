@@ -122,7 +122,7 @@ def main():
     ## Base Model                       
         
     BaseModel = bm.build_model(verbose=verbose)
-    
+   
     BaseModel, trainedModelPathBase = bm.train(known_points[['x', 'y']], known_points[['z']], unknown_points[['x','y']], unknown_points['z'],length, BaseModel, epochs,sampling_distance_x, sampling_distance_y,save_hist=save_hist, verbose=verbose)
 
     ResultBaseModel =  bm.predict(trainedModelPathBase, unknown_points, unknown_points[['x','y']])
@@ -151,7 +151,8 @@ def main():
     
     
     f= open(f"{path}/error.txt","a+")
-    
+    f.write(f"{len(known_points)} known points, {len(unknown_points)} unknown points\n")
+    f.write('\n')
     f.write(f"{scenario}\n")
     f.write('\n')
     f.write('\n')
@@ -204,22 +205,21 @@ if __name__ == "__main__":
     
     wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     
-    sampling_distance_x = 4
-    sampling_distance_y = 4 * 12
+    for sampling_distance_x in [6,4,2]: 
+        sampling_distance_y = sampling_distance_x * 12
     
-    # Name scenario ( for saving directories)
-    random = True
-    
-    if random:
-        
-        scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_RandomSampling'
-        
-    else:
-        
-        scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_UniformSampling'
-        
-        
-        
-    main()
+        # Name scenario ( for saving directories)
+        for random in [False, True]:
+            if random:
+                
+                scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_RandomSampling'
+                
+            else:
+                
+                scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_UniformSampling'
+                
+                
+            
+            main()
     
     print('fin')
