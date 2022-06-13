@@ -385,7 +385,7 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size=1
                         epochs=epochs,
                         batch_size=batch_size,
                         validation_data=(x_val, y_val),
-                        callbacks = create_callback(trainedModelPath),
+                        callbacks = create_callback(trainedModelPath,verbose=verbose),
                         verbose=verbose)
     
     if save_hist:

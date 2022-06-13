@@ -73,9 +73,7 @@ def train(x_train, y_train, x_val, y_val,length,model, epochs,sampling_distance_
         os.makedirs(trainedModelPath)
                 
 
-
-    callbacks = create_callback(trainedModelPath)
-
+    
     x_train = x_train.to_numpy()
     x_train = x_train.reshape(x_train.shape[0],x_train.shape[1],1)
 
@@ -91,7 +89,7 @@ def train(x_train, y_train, x_val, y_val,length,model, epochs,sampling_distance_
                             , y_train
                             , epochs=epochs
                             , validation_data = (x_val, y_val)
-                            , callbacks=callbacks
+                            , callbacks=create_callback(trainedModelPath, verbose=verbose)
                             , batch_size=batch_size
                             , verbose=verbose
                                 )
