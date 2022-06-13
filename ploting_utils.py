@@ -17,7 +17,7 @@ def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap=
     Returns:
         _return_: matplotlib.pyplot.figure: _description_ 
     """
-    minval = -40
+    minval = -55
     maxval = 0
     plt.figure(figsize=figsize)
     
@@ -71,7 +71,7 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
 
     
     """    
-    minval = -40
+    minval = -55
     maxval = 0
     
     keys = list(data.keys())
