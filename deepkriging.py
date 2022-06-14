@@ -9,7 +9,7 @@ import tensorflow as tf
 from data_preparation import *
 
 
-def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
+def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
     
         """
         quick function to create callbacks and or overwrite existing callbacks
@@ -31,7 +31,7 @@ def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
         
         if EarlyStopping:
             callbacks.append(tf.keras.callbacks.EarlyStopping(monitor="val_loss", 
-                                                              patience=200, 
+                                                              patience=400, 
                                                               verbose=verbose))
             
         return callbacks
