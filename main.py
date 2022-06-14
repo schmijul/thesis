@@ -30,10 +30,10 @@ import ploting_utils as pu
 
 
 def mae(y_true, y_pred):
-    return np.mean(np.abs(y_true - y_pred))
+    return np.mean(np.abs(y_true - y_pred).dropna())
 
 def mse(y_true, y_pred):
-    return np.mean(np.square(y_true - y_pred))
+    return np.mean(np.square((y_true - y_pred).dropna()))
 
 def main():
     
@@ -146,8 +146,8 @@ def main():
     keys = list(data.keys())
     for key in keys:
         
-        maes[key] = mae(unknown_points['z'].to_numpy(),data[key]['z'].to_numpy())
-        mses[key] = mse(unknown_points['z'].to_numpy(),data[key]['z'].to_numpy())
+        maes[key] = mae(unknown_points['z'],data[key]['z'])
+        mses[key] = mse(unknown_points['z'],data[key]['z'])
     
     
     f= open(f"{path}/error.txt","a+")
@@ -205,11 +205,11 @@ if __name__ == "__main__":
     
     wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     
-    for sampling_distance_x in [6,4,2]: 
+    for sampling_distance_x in [4,2]: 
         sampling_distance_y = sampling_distance_x * 12
     
         # Name scenario ( for saving directories)
-        for random in [False, True]:
+        for random in [ True]:
             if random:
                 
                 scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_RandomSampling'
