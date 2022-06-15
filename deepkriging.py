@@ -12,7 +12,17 @@ from data_preparation import *
 def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
     
         """
-        quick function to create callbacks and or overwrite existing callbacks
+        
+        _summary_
+
+                Args:
+                    trainedModelPath (str): path where trained model are saved
+                    EarlyStopping (bool): if True, early stopping is used
+                    verbose (bool): if True, print information about the training process
+                    
+        _description_  
+                 
+                    quick function to create callbacks and or overwrite existing callbacks for training
         
         """
         
@@ -47,6 +57,7 @@ def reminmax(x, x_max, x_min):
 def normalize_data(map, known_points, unknown_points):
     
     """
+    
     _summary_
 
         Args:
@@ -72,7 +83,7 @@ def normalize_data(map, known_points, unknown_points):
     
     return map,known_points, unknown_points, maxvals, minvals
     
-def calc_H_for_num_basis(N, n_dimensions=2):
+def calc_H_for_num_basis(N, n_dimensions=2, verbose=False):
     
     """
         _summary_
@@ -80,20 +91,23 @@ def calc_H_for_num_basis(N, n_dimensions=2):
             Args:
                 N (int) : number of points 
                 n_dimensions (int, optional) : Dimensions of points  Defaults to 2 (x,y).
-
+                verbose(bool): show H
+                
             Returns:
                 H (float) 
             
         _description_
 
-            This Function calculate the H ( Number of Elements in num_basis) descriped in " https://arxiv.org/pdf/2007.11972.pdf " on page 12
+            This Function calculates the H ( Number of Elements in num_basis) descriped in " https://arxiv.org/pdf/2007.11972.pdf " on page 12
 
     
     
     """
     
     H = 1 + (np.log2( N**(1/n_dimensions) / 10 ))
-    print(f'H = {H}')
+    if verbose:
+        
+        print("H: ", H)
     return H
     
     
@@ -128,6 +142,7 @@ def get_numBasis(N, H , n_dimensions=2, verbose=False):
             numBasis.append(int(Kh)**n_dimensions)
             
     return numBasis
+
 
 def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
     
@@ -249,67 +264,6 @@ def wendlandkernel(points, num_basis, verbose=False):
 
 
 
-
-
-def train_val_split(phi, known_points, unknown_points, map,verbose=False):
-    
-    """
-    _summary_
-
-        Args:
-            phi (pandas DataFrame): matrix of shape N x number_of_basis_functions prepared with the wendland kernel
-            known_points (pandas DataFrame): array of shape N x 3 -> x, y and z values of known points
-            unknown_points (pandas DataFrame): array of shape N x 3 -> x, y and vlues of unknown points
-            verbose (bool): if True, print more information 
-            
-        
-        Returns:
-            in and output for training and validation data
-    
-    _description_
-
-        This function uses all points from the map prepared by the wendland kernel.
-        It will then uses the index from known and unknown points to split the data into training and validation data.
-        
-    """
-   # Checking Input Args
-    if not(len(phi) > len(known_points) or len(phi) > len(unknown_points)):
-        print('Error : more known or unkown points than total points')
-        return False
-    
-    """
-    if not(len(phi) == len(map)):
-        print('Error : len phi does not match len map')
-        return False
-    """
-    
-
-    # Fct begins here 
-    if verbose:
-        print(f'max phi index : {phi.index.max()}')
-        print(f'max known points index : {known_points.index.max()}')
-        print(f'max unknown points index : {unknown_points.index.max()}')
-
-    start_index = np.min((known_points.index[0],unknown_points.index[0]))
-   
-
-    train_idx = known_points.loc[known_points.index < phi.index.max()].index 
-    val_idx = unknown_points.loc[unknown_points.index < phi.index.max()].index
-    
-    """
-        Since phi creation startet with a concatenation of known and unknown points and the index was not reset/sorted the order was still : 
-        first all known points, second all unknown points, there fore first taking the idx for known, then for second can be used here
-    """
-    train_idx = np.asarray([x for x in range(len(known_points))])
-    val_idx = np.asarray([x+len(known_points) for x in range(len(unknown_points))])
-    
-    x_train = phi.loc[train_idx].to_numpy()
-    y_train = known_points.z.to_numpy()
-    x_val = phi.loc[val_idx].to_numpy()
-    y_val = unknown_points.z.to_numpy()
-
-    return x_train, y_train, x_val, y_val
-
 def build_model(input_dim, verbose=False):
     
     """
@@ -370,6 +324,7 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size=1
     
        
     # Checking input Args
+    
     if not((len(x_train) == len(y_train)) and (len(x_val) == len(y_val))):
         print('Error x and y shapes do not match')
         return False
@@ -413,13 +368,14 @@ def predict(trainedModelPath, x_val):
     _summary_
 
         Args:
-            name (str): name of scenario this is used to load the best model for the choosen scenario
-            x_val (pandas DataFrame): validation coordinates
+                name (str): name of scenario this is used to load the best model for the choosen scenario
+                x_val (pandas DataFrame): validation coordinates
+                
+        Returns:
+                    predicted values at validation coordinates
             
-            Returns:
-                predicted values at validation coordinates
-        
-    """
+        """
+    
     # Checking input Args
     
     
