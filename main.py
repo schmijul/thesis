@@ -125,7 +125,7 @@ def main():
    
     BaseModel, trainedModelPathBase = bm.train(known_points[['x', 'y']], known_points[['z']], unknown_points[['x','y']], unknown_points['z'],length, BaseModel, epochs,sampling_distance_x, sampling_distance_y,save_hist=save_hist, verbose=verbose)
 
-    ResultBaseModel =  bm.predict(trainedModelPathBase, unknown_points, unknown_points[['x','y']])
+    ResultBaseModel =  bm.predict(trainedModelPathBase, unknown_points[['x','y']])
     
     
     

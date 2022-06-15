@@ -9,7 +9,17 @@ import pandas as pd
 def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
     
         """
-        quick function to create callbacks and or overwrite existing callbacks
+        
+        _summary_
+
+                Args:
+                    trainedModelPath (str): path where trained model are saved
+                    EarlyStopping (bool): if True, early stopping is used
+                    verbose (bool): if True, print information about the training process
+                    
+        _description_  
+                 
+                    quick function to create callbacks and or overwrite existing callbacks for training
         
         """
         
@@ -39,7 +49,7 @@ def build_model(verbose=False):
     """
 
     lazy Code to build Sequential model
-    x_train : array of training data to get right input shape
+    This model uses coordinates (x,y) as input and z ( value at coordinates) as output
     
     """
     model = Sequential()
@@ -62,24 +72,31 @@ def build_model(verbose=False):
 
 
 
-def train(x_train, y_train, x_val, y_val,length,model, epochs,sampling_distance_x, sampling_distance_y, save_hist=True,  verbose=False, batch_size=100):
+def train(x_train, y_train, x_val, y_val,model, epochs, scenario, save_hist=True,  verbose=False, batch_size=100):
     """
-        train model 
+    
+    _summary_
+    
+        Args:
+                
+                x_train (pandas DataFrame) : known points ( coordinates)
+                y_train (pandas DataFrame): known points ( values)
 
-        x_train : known points ( coordinates)
-        y_train : known points ( values)
+                x_val (pandas DataFrame) : unknown points ( coordinates)
+                y_val (pandas DataFrame) : unknown points ( values)
+                
+                model (keras model) : precompiled model
+                epochs (int) : number of epochs
+                scenario (str) : name of the scenario (for trainedModelPath)
 
-        x_val : unknown points ( coordinates)
-        y_val : unknown points ( values)
+                
 
-        model : Kera Model
-        epochs : number of epochs
-        batch_size : batch size
-
-        
+                save_hist (bool): if True, save history of training  
+                verbose (bool): if True, print information about the training process
+                  
     """
 
-    trainedModelPath = f'trainedModels/NonRandomResapling/samplerate_x{sampling_distance_x}_y{sampling_distance_y}_length{length}/'
+    trainedModelPath = f'trainedModels/baseModel/{scenario}'
          
 
     if not os.path.exists(trainedModelPath):
@@ -108,27 +125,37 @@ def train(x_train, y_train, x_val, y_val,length,model, epochs,sampling_distance_
                                 )
 
     if save_hist:
-             pd.DataFrame(history.history).to_csv(f'{trainedModelPath}/history_x{sampling_distance_x}_y{sampling_distance_y}.csv')
+             pd.DataFrame(history.history).to_csv(f'{trainedModelPath}/history.csv')
 
     return model, trainedModelPath
     
-def predict(trainedModelPath, unknown_points, x_val):
+def predict(trainedModelPath, x_val):
+    
     """
+    
+    _summary_
+    
+            Args: 
+                    trainedModelPath (str): path where trained model are saved
+                    x_val (pandas DataFrame) : validation points ( coordinates)
+                    
+                    
 
-        Predict the output of the model on the validation set.
-        model : pretrained Kera Model
-        x_val : validation set input
+    _description_
+    
+                    This Fct uses the trained model to predict the values at the validation points
+                    And then also uses the validation points ( coordinates) to assign each predicted value to it's coordinate pair
 
     """
     model = tf.keras.models.load_model(trainedModelPath+'/best_model.h5')
     prediction = model.predict(x_val)
 
     
-    pred_stacked = pd.DataFrame([prediction[:,0],unknown_points['x'].to_numpy(),unknown_points['y'].to_numpy()]).transpose()
+    pred_stacked = pd.DataFrame([prediction[:,0],x_val['x'].to_numpy(),x_val['y'].to_numpy()]).transpose()
     pred_stacked.columns = ['z','x','y']
 
     pred_stacked = pred_stacked[['x','y','z']]
-    pred_stacked.index = unknown_points.index
+    pred_stacked.index = x_val.index
     
     return pred_stacked
 
