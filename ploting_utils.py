@@ -54,7 +54,7 @@ def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap=
           
 
 def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'): 
-    
+        
     """
     _summary_
     

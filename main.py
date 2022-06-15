@@ -205,7 +205,7 @@ if __name__ == "__main__":
     
     wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     
-    for sampling_distance_x in [4,2]: 
+    for sampling_distance_x in [6,4,2]: 
         sampling_distance_y = sampling_distance_x * 12
     
         # Name scenario ( for saving directories)
