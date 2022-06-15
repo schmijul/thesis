@@ -6,16 +6,22 @@ from pyrsistent import v
 import seaborn as sns
 
 def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap='viridis'):
-    """_summary_
+    """
+    
+    _summary_
 
-    Args:
-        data (dict): data to plot key = title, value = np.array
-        map (np.array): whole map 
-        known_points (np.array): coordinate pairs of known points to plot them onto the whole map    
-        unknown_points (np.array): target values 
+        Args:
+            data (dict): dictionary of matrices to be plotted
+            data.keys() (list): list of keys in data will be used as title for subplots
+            data[key] (np-array): matrix to be plotted
+                
+            map (pandas DataFrame): matrix of the map to be plotted in format x, y, z
+            
+            known_points (pandas DataFrame)): will be used to mark known points on the map 
+            
+            unknown_points (pandas DataFrame): will be used to show the target heatmap in format x, y, z
 
-    Returns:
-        _return_: matplotlib.pyplot.figure: _description_ 
+   
     """
     minval = -55
     maxval = 0
@@ -63,11 +69,11 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
             data.keys() (list): list of keys in data will be used as title for subplots
             data[key] (np-array): matrix to be plotted
                 
-            map (np-array): matrix of the map to be plotted
+            map (pandas DataFrame): matrix of the map to be plotted in format x, y, z
             
-            known_points (np-array): will be used to mark known points on the map
+            known_points (pandas DataFrame)): will be used to mark known points on the map 
             
-            unknown_points (np-array): will be used to show the target heatmap
+            unknown_points (pandas DataFrame): will be used to show the target heatmap in format x, y, z
 
     
     """    
@@ -129,9 +135,9 @@ def generateHeatMaps(data, map, known_points, unknown_points , path):
                 
             map (pandas DataFrame): matrix of the map to be plotted in format x, y, z
             
-            known_points (np-array): will be used to mark known points on the map
+            known_points (pandas DataFrame): will be used to mark known points on the map
             
-            unknown_points (np-array): will be used to show the target heatmap
+            unknown_points (pandas DataFrame): will be used to show the target heatmap
     
     '''
     
