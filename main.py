@@ -37,11 +37,18 @@ def mse(y_true, y_pred):
 
 def main():
     
-    # Prepare whole map
     
     
+    wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
+    
+    if reduceResolution:
+        
+        wholeMap = wholeMap.iloc[::12,:]
+        
     Map, StackedMap = dp.prepare_map(wholeMap.copy(), length=length)
-
+    
+       
+        
     known_points, unknown_points = dp.resample(StackedMap.copy(), sampling_distance_x, sampling_distance_y)
     
     
@@ -60,7 +67,7 @@ def main():
             
         unknown_points = StackedMap
         
-    
+        
         
     # Interpolation
     
@@ -85,7 +92,7 @@ def main():
     N = len(known_points) + len(unknown_points) # Calculate the number of points
     H = dk.calc_H_for_num_basis(N)
     
-    numBasis = dk.findWorkingNumBasis(len(known_pointsDK),H,verbose=True) # Calculate the number of basis functions
+    numBasis = dk.findWorkingNumBasis(len(unknown_pointsDK),H,verbose=True) # Calculate the number of basis functions
             
         
     x_trainDK = dk.wendlandkernel(known_pointsDK[['x','y']], numBasis)
@@ -123,7 +130,7 @@ def main():
         
     BaseModel = bm.build_model(verbose=verbose)
    
-    BaseModel, trainedModelPathBase = bm.train(known_points[['x', 'y']], known_points[['z']], unknown_points[['x','y']], unknown_points['z'],length, BaseModel, epochs,sampling_distance_x, sampling_distance_y,save_hist=save_hist, verbose=verbose)
+    BaseModel, trainedModelPathBase = bm.train(known_points[['x', 'y']], known_points[['z']], unknown_points[['x','y']], unknown_points['z'],BaseModel, epochs, scenario,save_hist=save_hist, verbose=verbose)
 
     ResultBaseModel =  bm.predict(trainedModelPathBase, unknown_points[['x','y']])
     
@@ -198,18 +205,20 @@ if __name__ == "__main__":
     
     start_point=0
     length = None
-    interpolate_whole_map = 0
+    interpolate_whole_map = 1
     save_hist = 0
-    
+    reduceResolution = 1
     # Load data
     
-    wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     
-    for sampling_distance_x in [6,4,2]: 
+    for sampling_distance_x in [20]: 
+        
         sampling_distance_y = sampling_distance_x * 12
     
         # Name scenario ( for saving directories)
-        for random in [ True]:
+        
+        for random in [False, True]:
+        
             if random:
                 
                 scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_RandomSampling'
@@ -219,7 +228,8 @@ if __name__ == "__main__":
                 scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_UniformSampling'
                 
                 
-            
+            if interpolate_whole_map:
+                scenario = scenario + '_InterpolateAllPoints'
             main()
             
     
