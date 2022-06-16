@@ -4,7 +4,7 @@ import data_preparation as dp
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import trainNN
+import deepkriging as dk
 import os
 
 import pytest 
