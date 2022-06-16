@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from pyrsistent import v
 import seaborn as sns
 
-def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap='viridis'):
+def singleHeatMap(data, map, known_points, unknown_points, maxValue, minValue, figsize=(12,8), cmap='viridis'):
     """
     
     _summary_
@@ -21,10 +21,17 @@ def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap=
             
             unknown_points (pandas DataFrame): will be used to show the target heatmap in format x, y, z
 
-   
+            maxValue (float): maximum value of the heatmap scala
+            minValue (float): minimum value of the heatmap scala
+            
     """
-    minval = -55
-    maxval = 0
+    
+    
+    
+    
+    
+    
+    
     plt.figure(figsize=figsize)
     
     ax1 = plt.subplot2grid((1,3), (0,0))
@@ -33,16 +40,18 @@ def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap=
     
     sns.heatmap(ax=ax1,
                 data=map.pivot_table(index='y', columns='x', values='z'),
-                vmin=minval,
-                vmax=maxval,
+                vmin=minValue,
+                vmax=maxValue,
                 cmap=cmap)
+    
     ax1.plot(known_points['x'], known_points['y'], 'k.', ms=1)
+    
     ax1.set_title('whole_map with known points marked')
     
     sns.heatmap(ax=ax2,
                 data=unknown_points.pivot_table(index='y', columns='x', values='z'),
-                vmin=minval,
-                vmax=maxval,
+                vmin=minValue,
+                vmax=maxValue,
                 cmap=cmap)
     
     ax2.set_title('target heatmap')
@@ -50,16 +59,47 @@ def singleHeatMap(data, map, known_points, unknown_points, figsize=(12,8), cmap=
     title = list(data.keys())[0]
     sns.heatmap(ax=ax3,
                 data=data[title].pivot_table(index='y', columns='x', values='z'),
-                vmin=minval,
-                vmax=maxval,
+                vmin=minValue,
+                vmax=maxValue,
                 cmap=cmap)
     ax3.set_title(title)
     
     plt.legend()
     
-          
+def multipleHeatMapsNoBaseMap(data, maxValue, minValue,figsize=(16,7),cmap='viridis'):
+    
+    """
+    _summary_
+    
+        Args:
+            data (dict): dictionary of matrices to be plotted
+            data.keys() (list): list of keys in data will be used as title for subplots
+            data[key] (np-array): matrix to be plotted
+              
+            maxValue (float): maximum value of the heatmap scala
+            minValue (float): minimum value of the heatmap scala    
+    
+    """      
+    keys = list(data.keys())
+    figsize=figsize
+    
+    plt.figure(figsize=figsize)
+    
+    
+    for i in range(len(keys)):
+        
+        ax = plt.subplot2grid((1,len(keys)), (0,i))
+        
+        sns.heatmap(ax=ax,
+                    data=data[keys[i]].pivot_table(index='y', columns='x', values='z'),
+                    vmin=minValue,
+                    vmax=maxValue,
+                    cmap=cmap)
+        ax.set_title(keys[i])
+    
+    plt.legend()
 
-def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'): 
+def multipleHeatMaps(data, map, known_points, unknown_points, maxValue, minValue, cmap='viridis'): 
         
     """
     _summary_
@@ -74,11 +114,13 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
             known_points (pandas DataFrame)): will be used to mark known points on the map 
             
             unknown_points (pandas DataFrame): will be used to show the target heatmap in format x, y, z
+            
+            maxValue (float): maximum value of the heatmap scala
+            minValue (float): minimum value of the heatmap scala
 
     
     """    
-    minval = -55
-    maxval = 0
+    
     
     keys = list(data.keys())
     
@@ -91,16 +133,16 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
     
     sns.heatmap(ax=ax1,
                 data=map.pivot_table(index='y', columns='x', values='z'),
-                vmin=minval,
-                vmax=maxval,
+                vmin=minValue,
+                vmax=maxValue,
                 cmap=cmap)
     ax1.plot(known_points['x'], known_points['y'], 'k.', ms=1)
     ax1.set_title('whole_map with known points marked')
     
     sns.heatmap(ax=ax2,
                 data=unknown_points.pivot_table(index='y', columns='x', values='z'),
-                vmin=minval,
-                vmax=maxval,
+                vmin=minValue,
+                vmax=maxValue,
                 cmap=cmap)
     ax2.set_title('target heat map')
     
@@ -111,8 +153,8 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
         
         sns.heatmap(ax=ax,
                     data=data[keys[i]].pivot_table(index='y', columns='x', values='z'),
-                    vmin=minval,
-                    vmax=maxval,
+                    vmin=minValue,
+                    vmax=maxValue,
                     cmap=cmap)
         ax.set_title(keys[i])
     
@@ -123,7 +165,7 @@ def multipleHeatMaps(data, map, known_points, unknown_points, cmap='viridis'):
                   
    
     
-def generateHeatMaps(data, map, known_points, unknown_points , path):
+def generateHeatMaps(data, map, known_points, unknown_points , maxValue, minValue,showMap, path):
     
     '''
     _summary_
@@ -138,6 +180,9 @@ def generateHeatMaps(data, map, known_points, unknown_points , path):
             known_points (pandas DataFrame): will be used to mark known points on the map
             
             unknown_points (pandas DataFrame): will be used to show the target heatmap
+            
+            maxValue (float): maximum value of the heatmap scala
+            minValue (float): minimum value of the heatmap scala
     
     '''
     
@@ -147,32 +192,14 @@ def generateHeatMaps(data, map, known_points, unknown_points , path):
     
     if len(keys) == 1:
         
-        singleHeatMap(data, map, known_points, unknown_points)
+        singleHeatMap(data, map, known_points, unknown_points, maxValue, minValue)
     
     
     else:
-        
-        multipleHeatMaps(data, map, known_points, unknown_points)
+        if showMap:
+            multipleHeatMaps(data, map, known_points, unknown_points, maxValue, minValue)
+        else:
+            multipleHeatMapsNoBaseMap(data, maxValue, minValue)
                     
     plt.savefig(path)
                    
-if __name__ == '__main__':
-    
-    import data_preparation as dp
-    
-    
-    wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
-    
-    sampling_distance_x = 4
-    sampling_distance_y = 4 * 12
-    
-    Map, StackedMap = dp.prepare_map(wholeMap.copy())
-
-    known_points, unknown_points = dp.resample(StackedMap.copy(), sampling_distance_x, sampling_distance_y)
-    
-    path='plot.png'
-    
-    
-    generateHeatMaps({'test':unknown_points, 'test2':unknown_points}, StackedMap, known_points, unknown_points,path)
-    
-    

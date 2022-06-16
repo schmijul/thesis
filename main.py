@@ -220,9 +220,6 @@ def calcErrors():
     
     for key in list(data.keys()):
 
-        print(data[key].shape)
-        print(relativeError(unknownPoints['z'], data[key]['z']).shape)
-        
         
         relErrorDf = pd.DataFrame([unknownPoints['x'],unknownPoints['y'] ,relativeError(unknownPoints['z'], data[key]['z'])]).T
 
@@ -318,16 +315,43 @@ def main():
     calcErrors()
 
     # Plots
-  
-    for key in list(data.keys()):
-        print(key)
-        pu.generateHeatMaps({key:data[key]},StackedMap, knownPoints, unknownPoints, path +f'{key}.png')
-        
-        
-    pu.generateHeatMaps(data,StackedMap, knownPoints,unknownPoints, path+'heatmaps.png')
     
-
-    pu.generateHeatMaps(relErrors,StackedMap, knownPoints,unknownPoints, path+'relErrors.png')
+    maxValue = 0
+    
+    for key in list(data.keys()):
+        if data[key]['z'].max() > maxValue:
+            maxValue = data[key]['z'].max()
+            
+    # find min value from dictionary of pandas DataFrames
+    
+    
+    minValue = np.Inf
+    for key in list(data.keys()):
+        if data[key]['z'].min() < minValue:
+            minValue = data[key]['z'].min()
+        
+    for key in list(data.keys()):   
+        pu.generateHeatMaps({key:data[key]},StackedMap, knownPoints, unknownPoints, maxValue, minValue, 0,path +f'{key}.png')
+        
+        
+    pu.generateHeatMaps(data,StackedMap, knownPoints,unknownPoints, maxValue, minValue, 1,path+'heatmaps.png')
+    
+    maxError = 0
+    
+    for key in list(relErrors.keys()):
+        if relErrors[key]['z'].max() > maxError:
+            maxError = relErrors[key]['z'].max()
+            
+    # find min value from dictionary of pandas DataFrames
+    
+    
+    minError = np.Inf
+    for key in list(data.keys()):
+        if relErrors[key]['z'].min() < minError:
+            minError = relErrors[key]['z'].min()
+            
+            
+    pu.generateHeatMaps(relErrors,StackedMap, knownPoints,unknownPoints,maxError, minError, 0,path+'relErrors.png')
     
 
     
@@ -337,64 +361,38 @@ if __name__ == '__main__':
     interpolateWholeMap = 0
     random = 0
     length = None
-    epochs = 30
+    epochs = 2000
     reduceResolution = 0
     verbose = 1
     save_hist = 0
     
-    
-    
-    for samplingDistance_x in [28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, ]: 
-            
-            samplingDistance_y = samplingDistance_x * 12
-            
-            if random:
-                    
-                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_RandomSampling'
-                            
-            else:
-                            
-                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_UniformSampling'
-                            
-                            
-            if interpolateWholeMap:
-                scenario = scenario + '_InterpolateAllPoints'
+    for interpolateWholeMap in [0,1]:
         
-        
-            main()
-            
-            
-            
-    
-    interpolateWholeMap = 1
-    random = 0
-    length = None
-    epochs = 30
-    reduceResolution = 1
-    verbose = 1
-    save_hist = 0
-    
-    
-    
-    for samplingDistance_x in [28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, ]: 
-            
-            samplingDistance_y = samplingDistance_x * 12
-            
-            if random:
-                    
-                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_RandomSampling'
-                            
-            else:
-                            
-                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_UniformSampling'
-                            
-            if reduceResolution:
-                scenario = scenario + '_ReduceResolution'
-                            
-            if interpolateWholeMap:
-                scenario = scenario + '_InterpolateAllPoints'
+        if interpolateWholeMap:
+            reduceResolution = 1
+        else:
+            reduceResolution = 0
                 
-
         
-        
-            main()
+        for samplingDistance_x in [28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, ]: 
+                
+                samplingDistance_y = samplingDistance_x * 12
+                for random in [0,1]:
+                    if random:
+                            
+                        scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_RandomSampling'
+                                    
+                    else:
+                                    
+                        scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_UniformSampling'
+                                    
+                                    
+                    if interpolateWholeMap:
+                        scenario = scenario + '_InterpolateAllPoints'
+                
+                
+                    main()
+                
+                
+            
+    
