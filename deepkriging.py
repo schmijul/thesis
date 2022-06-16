@@ -9,7 +9,7 @@ import tensorflow as tf
 from data_preparation import *
 
 
-def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
+def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
     
         """
         
@@ -43,7 +43,7 @@ def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
             callbacks.append(tf.keras.callbacks.EarlyStopping(monitor="val_loss", 
                                                               patience=400, 
                                                               verbose=verbose))
-            
+                
         return callbacks
         
 def minmax(x, x_max, x_min):
@@ -111,7 +111,7 @@ def calc_H_for_num_basis(N, n_dimensions=2, verbose=False):
     return H
     
     
-def get_numBasis(N, H , n_dimensions=2, verbose=False):
+def get_numBasis( H , n_dimensions=2, verbose=False):
       
     """
       _summary_
@@ -171,7 +171,7 @@ def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
     try: 
         
         
-        numBasis = get_numBasis(N, H, n_dimensions, verbose)
+        numBasis = get_numBasis( H, n_dimensions, verbose)
         
         
         
@@ -279,7 +279,7 @@ def build_model(input_dim, verbose=False):
     """
     
     model = Sequential()
-    model.add(Dense(500, input_dim = input_dim,  kernel_initializer='he_uniform', activation='relu'))
+    model.add(Dense(100, input_dim = input_dim,  kernel_initializer='he_uniform', activation='relu'))
     model.add(Dropout(rate=0.5))
     model.add(BatchNormalization())
     model.add(Dense(100, activation='relu'))

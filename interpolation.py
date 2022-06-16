@@ -28,13 +28,17 @@ def grid_interpolation(known_points, unknown_points,method='linear', verbose=Fal
 
         x = unknown_points['x']
         y = unknown_points['y']
+        
+        
         if verbose:
             print(f' unique x vals : {x.unique()}')
             print(' ')
             print(f' unqique y vals : {y.unique()}')
+            
+            
         stepsize_x = x.unique()[1] - x.unique()[0]
         stepsize_y = y.unique()[1] - y.unique()[0]
-        
+        print(f'stepsize y  { stepsize_y}')
         if verbose:
                 print('stepsize_x = ', stepsize_x)
                 print('stepsize_y = ', stepsize_y)
@@ -56,7 +60,7 @@ def grid_interpolation(known_points, unknown_points,method='linear', verbose=Fal
                 print(f'interpolated grid with shape {lin_interpol.shape}')
         lin_interpol = pd.DataFrame(lin_interpol)
 
-        
+        print(f'len Lin :{len(lin_interpol)}')
         
         lin_interpol.columns = unknown_points.pivot_table(index='y', columns='x', values='z').columns
 
