@@ -6,7 +6,7 @@ from keras.wrappers.scikit_learn import KerasRegressor
 import pandas as pd
 
 
-def create_callback(trainedModelPath, EarlyStopping=False,verbose=False):
+def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
     
         """
         

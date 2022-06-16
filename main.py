@@ -29,17 +29,66 @@ import seaborn as sns
 import ploting_utils as pu
 
 
+
+# Fct for Error calcualtion
+
 def mae(y_true, y_pred):
+    
+    '''
+    _summary_:
+                Args:
+                    y_true (np.array): True values in format Nx1
+                    y_pred (np.array): Predicted values in format Nx1
+                Returns:
+                    mae (float): Mean absolute error
+    
+    '''
+    
     return np.mean(np.abs(y_true - y_pred).dropna())
 
+
 def mse(y_true, y_pred):
+    
+    '''
+    _summary_:
+                Args:
+                    y_true (np.array): True values in format Nx1
+                    y_pred (np.array): Predicted values in format Nx1
+                Returns:
+                    mse (float): Mean squared error
+    
+    '''
+    
     return np.mean(np.square((y_true - y_pred).dropna()))
 
-def main():
+
+def relativeError(y_true, y_pred):
+    
+    '''
+    _summary_:
+                Args:
+                    y_true (np.array): True values in format Nx1
+                    y_pred (np.array): Predicted values in format Nx1
+                Returns:
+                    relativeError (float): Relative error ( abs and percentage)
+    
+    '''
+    
+    return np.abs(y_true - y_pred).dropna()/np.abs(y_true.dropna())
+
+
+
+def prepareMap():
     
     
+
     
     wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
+    
+    
+    global Map, StackedMap
+    
+    global knownPoints, unknownPoints
     
     if reduceResolution:
         
@@ -47,9 +96,9 @@ def main():
         
     Map, StackedMap = dp.prepare_map(wholeMap.copy(), length=length)
     
-       
+           
         
-    known_points, unknown_points = dp.resample(StackedMap.copy(), sampling_distance_x, sampling_distance_y)
+    knownPoints, unknownPoints = dp.resample(StackedMap.copy(), samplingDistance_x, samplingDistance_y)
     
     
     if random:
@@ -61,91 +110,74 @@ def main():
         """
         
         
-        known_points = dp.randomsampling(StackedMap.copy(), len(known_points))
-    
-    if interpolate_whole_map:
-            
-        unknown_points = StackedMap
-        
-        
-        
-    # Interpolation
-    
-    ## Linear Grid Interpolation
-    
-    
-    ResutLinearInterpolation = ip.grid_interpolation(known_points.copy(), unknown_points.copy(), method='linear', verbose=verbose)
-    
-    ## Kriging 
-    
-    
-    ResultKriging = ip.kriging_skg(known_points.copy(), unknown_points.copy(), 10 )
-    
-                        
-    # Deep Learning
-        
-    ## Preparing Deep Kriging Data
-    
-    
-    StackedMapNormalizedForDK, known_pointsDK, unknown_pointsDK, maxvalsDK, minvalsDK = dk.normalize_data(StackedMap.copy(), known_points.copy(), unknown_points.copy()) # minmax normalize the data
-    
-    N = len(known_points) + len(unknown_points) # Calculate the number of points
-    H = dk.calc_H_for_num_basis(N)
-    
-    numBasis = dk.findWorkingNumBasis(len(unknown_pointsDK),H,verbose=True) # Calculate the number of basis functions
-            
-        
-    x_trainDK = dk.wendlandkernel(known_pointsDK[['x','y']], numBasis)
-    np.save('x_trainDK.npy', x_trainDK.to_numpy())
-    print('finished x train')
-    x_valDK = dk.wendlandkernel(unknown_pointsDK[['x','y']], numBasis)
-    np.save('x_valDK.npy', x_valDK.to_numpy())
-    print(' finished x val')
-    y_trainDK = known_points[['z']]
-    np.save('y_trainDK.npy', y_trainDK.to_numpy())
-    y_valDK = unknown_points[['z']]
-    np.save('y_valDK.npy', y_valDK.to_numpy())
-    
-    DeepKrigingModel = dk.build_model(x_trainDK.shape[1], verbose=verbose)
-    
-    DeepKrigingModel, trainedModelPathDK = dk.train_model(DeepKrigingModel, x_trainDK, y_trainDK, x_valDK, y_valDK, scenario, epochs, save_hist=save_hist, verbose=verbose)
-    
-    DeepKrigingPrediction = dk.predict(trainedModelPathDK, x_valDK)[:,0]
-    
-    ResultDeepKriging = dk.reminmax(DeepKrigingPrediction, minvalsDK['z'], maxvalsDK['z'])
-    
-    ### Transform Deep Kriging Result into a pandas DataFrame with cols x, y, z
-               
-             
-    DeepKrigingPrediction= pd.DataFrame([DeepKrigingPrediction,unknown_points['x'].to_numpy(),unknown_points['y'].to_numpy()]).transpose() # create a DataFrame 
-                        
-    DeepKrigingPrediction.columns = ['z','x','y'] # Fix column names
-    
-    DeepKrigingPrediction  = DeepKrigingPrediction[['x','y','z']]
-    
-    DeepKrigingPrediction.index = unknown_points.index # Fix index
-    
-    
-    ## Base Model                       
-        
-    BaseModel = bm.build_model(verbose=verbose)
-   
-    BaseModel, trainedModelPathBase = bm.train(known_points[['x', 'y']], known_points[['z']], unknown_points[['x','y']], unknown_points['z'],BaseModel, epochs, scenario,save_hist=save_hist, verbose=verbose)
+        knownPoints = dp.randomsampling(StackedMap.copy(), len(knownPoints))
 
-    ResultBaseModel =  bm.predict(trainedModelPathBase, unknown_points[['x','y']])
+
+def normalizeDeepkrigingData():
+    
+    
+    global  StackedMapNormalizedForDK, knownPointsDK, unknownPointsDK, maxvalsDK, minvalsDK
+    StackedMapNormalizedForDK, knownPointsDK, unknownPointsDK, maxvalsDK, minvalsDK = dk.normalize_data(StackedMap.copy(), knownPoints.copy(), unknownPoints.copy()) # minmax normalize the data
     
     
     
+def getWendlandParams():
     
-    #
+    global N, numBasis
     
-    data = {'Linear Interpolation':ResutLinearInterpolation,'Kriging':ResultKriging,'Deep Kriging':DeepKrigingPrediction,'Base Model':ResultBaseModel}
-    path = f'/home/schmijul/source/repos/thesis/newplots/main/{scenario}/'
-    if not os.path.exists(path):
-            os.makedirs(path)
-                    
+    if interpolateWholeMap:
+        
+        N = len(StackedMap)
+        
+    else:
+        
+        N = 100000 #len(knownPoints) + len(unknownPoints)
+        
+    H = dk.calc_H_for_num_basis(N) # Calculate the number of basis functions
     
-    # calculate errors
+    numBasis = dk.findWorkingNumBasis(N,H,verbose=True) # Calculate the number of basis functions
+            
+        
+        
+def prepareKnownPointsDK():
+    
+    '''
+    
+        Prepare known points for Deep Kriging using the wendland Kernel
+    
+    '''
+    
+    global x_trainDK, y_trainDK
+    
+    x_trainDK = dk.wendlandkernel(knownPointsDK[['x','y']], numBasis)
+    y_trainDK = knownPoints[['z']]
+    
+def prepareUnknownPointsDK():
+    
+    """
+    
+        Prepare unknown points for Deep Kriging using the wendland Kernel
+        Either Prepare specific unknown points or prepare the entire map
+        
+    """
+    
+    global x_valDK, y_valDK
+    
+    if interpolateWholeMap:
+    
+        x_valDK = dk.wendlandkernel(StackedMap[['x','y']], numBasis)
+    
+    else:
+        
+        x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
+        
+    y_valDK = unknownPoints[['z']]
+    
+    
+        
+def calcErrors():
+    
+    global relErrors
     
     maes = {}
     mses = {}
@@ -153,12 +185,12 @@ def main():
     keys = list(data.keys())
     for key in keys:
         
-        maes[key] = mae(unknown_points['z'],data[key]['z'])
-        mses[key] = mse(unknown_points['z'],data[key]['z'])
+        maes[key] = mae(unknownPoints['z'],data[key]['z'])
+        mses[key] = mse(unknownPoints['z'],data[key]['z'])
     
     
     f= open(f"{path}/error.txt","a+")
-    f.write(f"{len(known_points)} known points, {len(unknown_points)} unknown points\n")
+    f.write(f"{len(knownPoints)} known points = {len(knownPoints)/len(StackedMap) * 100 } % of the Map, len(unkwonPoints) unknown points = {len(unknownPoints)/len(StackedMap) *100} % of the Map \n")
     f.write('\n')
     f.write(f"{scenario}\n")
     f.write('\n')
@@ -179,58 +211,190 @@ def main():
         f.write('%s:%s\n' % (key, value))
 
     f.write('\n')
-    #f.write(f"{mses}\n")
     
     
+    
+    ### Rel Error
+    
+    relErrors = {}
+    
+    for key in list(data.keys()):
+
+        print(data[key].shape)
+        print(relativeError(unknownPoints['z'], data[key]['z']).shape)
+        
+        
+        relErrorDf = pd.DataFrame([unknownPoints['x'],unknownPoints['y'] ,relativeError(unknownPoints['z'], data[key]['z'])]).T
+
+        relErrorDf.columns = ['x','y','z']
+        
+        relErrors[key] = relErrorDf
+
+def main():
+    
+    # Data Set UP
+    
+    samplingDistance_x = 22
+    
+    samplingDistance_y = 22 * 12
+    
+    
+    getWendlandParams()
+    
+    prepareMap()
+    
+    normalizeDeepkrigingData()
+    
+    prepareKnownPointsDK()
+    
+    prepareUnknownPointsDK()
+    
+        
+        
+    # Interpolation
+    
+    ## Linear Grid Interpolation
+    
+    
+    ResutLinearInterpolation = ip.grid_interpolation(knownPoints.copy(), unknownPoints.copy(), method='linear', verbose=verbose)
+    
+    ## Kriging 
+    
+    
+    ResultKriging = ip.kriging_skg(knownPoints.copy(), unknownPoints.copy(), 10 )
+    
+    # Deep Learning
+    
+    ## Training
+    
+    DeepKrigingModel = dk.build_model(x_trainDK.shape[1], verbose=verbose)
+    
+    DeepKrigingModel, trainedModelPathDK = dk.train_model(DeepKrigingModel, x_trainDK, y_trainDK, x_valDK, y_valDK, scenario, epochs, save_hist=save_hist, verbose=verbose)
+    
+    DeepKrigingPrediction = dk.predict(trainedModelPathDK, x_valDK)[:,0]
+    
+    ResultDeepKriging = dk.reminmax(DeepKrigingPrediction, minvalsDK['z'], maxvalsDK['z'])
+    
+    ## Transform Deep Kriging Result into a pandas DataFrame with cols x, y, z
+               
+             
+    DeepKrigingPrediction= pd.DataFrame([DeepKrigingPrediction,unknownPoints['x'].to_numpy(),unknownPoints['y'].to_numpy()]).transpose() # create a DataFrame 
+                        
+    DeepKrigingPrediction.columns = ['z','x','y'] # Fix column names
+    
+    DeepKrigingPrediction  = DeepKrigingPrediction[['x','y','z']]
+    
+    DeepKrigingPrediction.index = unknownPoints.index # Fix index
+    
+    # Base Model
+    
+    BaseModel = bm.build_model(verbose=verbose)
+   
+    BaseModel, trainedModelPathBase = bm.train(knownPoints[['x', 'y']], knownPoints[['z']], unknownPoints[['x','y']], unknownPoints['z'],BaseModel, epochs, scenario,save_hist=save_hist, verbose=verbose)
+
+    ResultBaseModel =  bm.predict(trainedModelPathBase, unknownPoints[['x','y']])
+    
+    # Work with Results
+    
+    global data
+    
+    data = {'Linear Interpolation':ResutLinearInterpolation,'Kriging':ResultKriging,'Deep Kriging':DeepKrigingPrediction,'Base Model':ResultBaseModel}
+    
+    
+    ## Create Path to store results/ figures etc..
+    
+    global path
+    path = f'/home/schmijul/source/repos/thesis/newplots/main/{scenario}/'
+    
+    if not os.path.exists(path):
+            os.makedirs(path)
+                    
+                    
+                    
+                    
+    
+    # calculate errors
+    
+    calcErrors()
+
     # Plots
-    
-    
   
-    for key in keys:
+    for key in list(data.keys()):
+        print(key)
+        pu.generateHeatMaps({key:data[key]},StackedMap, knownPoints, unknownPoints, path +f'{key}.png')
         
-        pu.generateHeatMaps({key:data[key]},StackedMap, known_points, unknown_points, path +f'{key}.png')
         
-        
-    pu.generateHeatMaps(data,StackedMap, known_points,unknown_points, path+'heatmaps.png')
+    pu.generateHeatMaps(data,StackedMap, knownPoints,unknownPoints, path+'heatmaps.png')
     
 
+    pu.generateHeatMaps(relErrors,StackedMap, knownPoints,unknownPoints, path+'relErrors.png')
+    
 
-if __name__ == "__main__":
     
-    # Genereal Params for execution
+if __name__ == '__main__':
     
     
-    verbose = 1
-    epochs = 3000
-    
-    start_point=0
+    interpolateWholeMap = 0
+    random = 0
     length = None
-    interpolate_whole_map = 1
+    epochs = 30
+    reduceResolution = 0
+    verbose = 1
     save_hist = 0
-    reduceResolution = 1
-    # Load data
     
     
-    for sampling_distance_x in [20]: 
-        
-        sampling_distance_y = sampling_distance_x * 12
     
-        # Name scenario ( for saving directories)
-        
-        for random in [False, True]:
-        
+    for samplingDistance_x in [28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, ]: 
+            
+            samplingDistance_y = samplingDistance_x * 12
+            
             if random:
-                
-                scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_RandomSampling'
-                
+                    
+                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_RandomSampling'
+                            
             else:
-                
-                scenario = f'wholeMap_x-{sampling_distance_x}_y-{int(sampling_distance_y/12)}_UniformSampling'
-                
-                
-            if interpolate_whole_map:
+                            
+                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_UniformSampling'
+                            
+                            
+            if interpolateWholeMap:
                 scenario = scenario + '_InterpolateAllPoints'
+        
+        
             main()
             
+            
+            
     
-    print('fin')
+    interpolateWholeMap = 1
+    random = 0
+    length = None
+    epochs = 30
+    reduceResolution = 1
+    verbose = 1
+    save_hist = 0
+    
+    
+    
+    for samplingDistance_x in [28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, ]: 
+            
+            samplingDistance_y = samplingDistance_x * 12
+            
+            if random:
+                    
+                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_RandomSampling'
+                            
+            else:
+                            
+                scenario = f'wholeMap_x-{samplingDistance_x}_y-{int(samplingDistance_y/12)}_UniformSampling'
+                            
+            if reduceResolution:
+                scenario = scenario + '_ReduceResolution'
+                            
+            if interpolateWholeMap:
+                scenario = scenario + '_InterpolateAllPoints'
+                
+
+        
+        
+            main()
