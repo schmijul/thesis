@@ -6,3 +6,4 @@ pykrige
 scikit-gstat
 GPy
 tensorflow
+pytest
