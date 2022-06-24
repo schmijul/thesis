@@ -175,7 +175,7 @@ def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
         
         
         
-        testVariable = np.zeros((N, int(sum(numBasis))))
+        testVariable = np.zeros((N, int(sum(numBasis))),dtype=np.float32)
         
         
                 
@@ -236,10 +236,11 @@ def wendlandkernel(points, num_basis, verbose=False):
     ##Wendland kernel
     
     basis_size = 0
-    phi = np.zeros((N, int(sum(num_basis))))
+    phi = np.zeros((N, int(sum(num_basis))),dtype=np.float32)
+    print(phi.shape)
     
     for res in range(len(num_basis)):
-
+        print(res)
         theta = 1/np.sqrt(num_basis[res])*2.5
         knots_x, knots_y = np.meshgrid(knots_1dx[res],knots_1dy[res])
         knots = np.column_stack((knots_x.flatten(),knots_y.flatten()))
@@ -342,6 +343,7 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size=1
     
      
     if not os.path.exists(trainedModelPath):
+        
                                 os.makedirs(trainedModelPath)
                     
         
@@ -354,6 +356,7 @@ def train_model(model, x_train, y_train, x_val, y_val, name,epochs, batch_size=1
                         verbose=verbose)
     
     if save_hist:
+        
              pd.DataFrame(history.history).to_csv(f'{trainedModelPath}/{name}_history.csv')
 
     return model, trainedModelPath

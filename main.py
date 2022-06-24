@@ -80,7 +80,7 @@ def relativeError(y_true, y_pred):
 
 def prepareMap():
     
-    
+    global Map, StackedMap, knownPoints, unknownPoints, maxvals, minvals
 
     
     wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
@@ -91,6 +91,7 @@ def prepareMap():
     global knownPoints, unknownPoints
     
     if reduceResolution:
+        wholeMap = wholeMap.iloc[int(len(wholeMap)/2):]
         
         wholeMap = wholeMap.iloc[::12,:]
         
@@ -112,6 +113,9 @@ def prepareMap():
         
         knownPoints = dp.randomsampling(StackedMap.copy(), len(knownPoints))
 
+    if interpolateWholeMap:
+        
+        unknownPoints = StackedMap.copy()
 
 def normalizeDeepkrigingData():
     
@@ -166,12 +170,14 @@ def prepareUnknownPointsDK():
     if interpolateWholeMap:
     
         x_valDK = dk.wendlandkernel(StackedMap[['x','y']], numBasis)
+        y_valDK = StackedMap[['z']]
     
+        unknownPoints = StackedMap.copy()
     else:
         
         x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
-        
-    y_valDK = unknownPoints[['z']]
+            
+        y_valDK = unknownPoints[['z']]
     
     
         
@@ -234,11 +240,11 @@ def main():
     samplingDistance_x = 22
     
     samplingDistance_y = 22 * 12
+    prepareMap()
     
     
     getWendlandParams()
     
-    prepareMap()
     
     normalizeDeepkrigingData()
     
@@ -366,15 +372,16 @@ if __name__ == '__main__':
     verbose = 1
     save_hist = 0
     
-    for interpolateWholeMap in [0,1]:
+    for interpolateWholeMap in [1,0]:
         
         if interpolateWholeMap:
+            
             reduceResolution = 1
         else:
             reduceResolution = 0
                 
         
-        for samplingDistance_x in [28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, ]: 
+        for samplingDistance_x in [ 6, 4, 2, ]: 
                 
                 samplingDistance_y = samplingDistance_x * 12
                 for random in [0,1]:
@@ -389,6 +396,9 @@ if __name__ == '__main__':
                                     
                     if interpolateWholeMap:
                         scenario = scenario + '_InterpolateAllPoints'
+                    
+                    if length:
+                        scenario = scenario + f'_length-{length}'
                 
                 
                     main()
