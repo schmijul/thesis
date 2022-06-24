@@ -372,7 +372,7 @@ if __name__ == '__main__':
     verbose = 1
     save_hist = 0
     
-    for interpolateWholeMap in [1,0]:
+    for interpolateWholeMap in [0,1]:
         
         if interpolateWholeMap:
             
@@ -381,7 +381,7 @@ if __name__ == '__main__':
             reduceResolution = 0
                 
         
-        for samplingDistance_x in [ 6, 4, 2, ]: 
+        for samplingDistance_x in [ 42, 40,38, 36, 34, 32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2]: ]: 
                 
                 samplingDistance_y = samplingDistance_x * 12
                 for random in [0,1]:
