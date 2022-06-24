@@ -121,6 +121,7 @@ def normalizeDeepkrigingData():
     
     
     global  StackedMapNormalizedForDK, knownPointsDK, unknownPointsDK, maxvalsDK, minvalsDK
+    
     StackedMapNormalizedForDK, knownPointsDK, unknownPointsDK, maxvalsDK, minvalsDK = dk.normalize_data(StackedMap.copy(), knownPoints.copy(), unknownPoints.copy()) # minmax normalize the data
     
     
@@ -177,7 +178,7 @@ def prepareUnknownPointsDK():
         
         x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
             
-        y_valDK = unknownPoints[['z']]
+        y_valDK = unknownPointsDK[['z']]
     
     
         
