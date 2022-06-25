@@ -92,7 +92,7 @@ def prepareMap():
     
     if reduceResolution:
         #wholeMap = wholeMap.iloc[int(len(wholeMap)/2):]
-        
+        wholeMap = wholeMap.iloc[:int(len(wholeMap)/2)]
         wholeMap = wholeMap.iloc[::12,:]
         
     Map, StackedMap = dp.prepare_map(wholeMap.copy(), length=length)
@@ -101,9 +101,6 @@ def prepareMap():
         
     knownPoints, unknownPoints = dp.resample(StackedMap.copy(), samplingDistance_x, samplingDistance_y)
     
-    if interpolateWholeMap:
-    
-        unknownPoints = StackedMap
     
     if random:
         
@@ -176,7 +173,7 @@ def prepareUnknownPointsDK():
         x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
         y_valDK = unknownPointsDK[['z']]
     
-        unknownPoints = StackedMap.copy()
+       
     else:
         
         x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
