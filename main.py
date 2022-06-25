@@ -91,7 +91,7 @@ def prepareMap():
     global knownPoints, unknownPoints
     
     if reduceResolution:
-        wholeMap = wholeMap.iloc[int(len(wholeMap)/2):]
+        #wholeMap = wholeMap.iloc[int(len(wholeMap)/2):]
         
         wholeMap = wholeMap.iloc[::12,:]
         
@@ -101,6 +101,9 @@ def prepareMap():
         
     knownPoints, unknownPoints = dp.resample(StackedMap.copy(), samplingDistance_x, samplingDistance_y)
     
+    if interpolateWholeMap:
+    
+        unknownPoints = StackedMap
     
     if random:
         
@@ -155,7 +158,7 @@ def prepareKnownPointsDK():
     global x_trainDK, y_trainDK
     
     x_trainDK = dk.wendlandkernel(knownPointsDK[['x','y']], numBasis)
-    y_trainDK = knownPoints[['z']]
+    y_trainDK = knownPointsDK[['z']]
     
 def prepareUnknownPointsDK():
     
@@ -170,8 +173,8 @@ def prepareUnknownPointsDK():
     
     if interpolateWholeMap:
     
-        x_valDK = dk.wendlandkernel(StackedMap[['x','y']], numBasis)
-        y_valDK = StackedMap[['z']]
+        x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
+        y_valDK = unknownPointsDK[['z']]
     
         unknownPoints = StackedMap.copy()
     else:
@@ -282,13 +285,13 @@ def main():
     ## Transform Deep Kriging Result into a pandas DataFrame with cols x, y, z
                
              
-    DeepKrigingPrediction= pd.DataFrame([DeepKrigingPrediction,unknownPoints['x'].to_numpy(),unknownPoints['y'].to_numpy()]).transpose() # create a DataFrame 
+    ResultDeepKriging= pd.DataFrame([ResultDeepKriging,unknownPoints['x'].to_numpy(),unknownPoints['y'].to_numpy()]).transpose() # create a DataFrame 
                         
-    DeepKrigingPrediction.columns = ['z','x','y'] # Fix column names
+    ResultDeepKriging.columns = ['z','x','y'] # Fix column names
     
-    DeepKrigingPrediction  = DeepKrigingPrediction[['x','y','z']]
+    ResultDeepKriging  = DeepKrigingPrediction[['x','y','z']]
     
-    DeepKrigingPrediction.index = unknownPoints.index # Fix index
+    ResultDeepKriging.index = unknownPoints.index # Fix index
     
     # Base Model
     
@@ -302,7 +305,7 @@ def main():
     
     global data
     
-    data = {'Linear Interpolation':ResutLinearInterpolation,'Kriging':ResultKriging,'Deep Kriging':DeepKrigingPrediction,'Base Model':ResultBaseModel}
+    data = {'Linear Interpolation':ResutLinearInterpolation,'Kriging':ResultKriging,'Deep Kriging':ResultDeepKriging,'Base Model':ResultBaseModel}
     
     
     ## Create Path to store results/ figures etc..
@@ -373,7 +376,7 @@ if __name__ == '__main__':
     verbose = 1
     save_hist = 0
     
-    for interpolateWholeMap in [0,1]:
+    for interpolateWholeMap in [1,0]:
         
         if interpolateWholeMap:
             
