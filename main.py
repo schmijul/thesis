@@ -137,6 +137,7 @@ def getWendlandParams():
     else:
         
         N = 1774043 #len(knownPoints) + len(unknownPoints)
+    
         
     H = dk.calc_H_for_num_basis(N) # Calculate the number of basis functions
     
@@ -155,7 +156,7 @@ def prepareKnownPointsDK():
     global x_trainDK, y_trainDK
     
     x_trainDK = dk.wendlandkernel(knownPointsDK[['x','y']], numBasis)
-    y_trainDK = knownPointsDK[['z']]
+    y_trainDK = knownPoints[['z']]
     
 def prepareUnknownPointsDK():
     
@@ -171,14 +172,14 @@ def prepareUnknownPointsDK():
     if interpolateWholeMap:
     
         x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
-        y_valDK = unknownPointsDK[['z']]
+        y_valDK = unknownPoints[['z']]
     
        
     else:
         
         x_valDK = dk.wendlandkernel(unknownPointsDK[['x','y']], numBasis)
             
-        y_valDK = unknownPointsDK[['z']]
+        y_valDK = unknownPoints[['z']]
     
     
         
@@ -279,7 +280,7 @@ def main():
     
     print(f' deepkriging before min max min val : {DeepKrigingPrediction.min()}')
     
-    ResultDeepKriging = dk.reminmax(DeepKrigingPrediction, minvalsDK['z'], maxvalsDK['z'])
+    ResultDeepKriging = DeepKrigingPrediction#dk.reminmax(DeepKrigingPrediction, minvalsDK['z'], maxvalsDK['z'])
     print(f' deepkriging after min max min val : {ResultDeepKriging.min()}')
     ## Transform Deep Kriging Result into a pandas DataFrame with cols x, y, z
                
@@ -373,7 +374,7 @@ if __name__ == '__main__':
     interpolateWholeMap = 0
     random = 0
     length = None
-    epochs = 1000
+    epochs = 1700
     reduceResolution = 0
     verbose = 1
     save_hist = 0
@@ -387,7 +388,7 @@ if __name__ == '__main__':
             reduceResolution = 0
                 
         
-        for samplingDistance_x in [48,46,44, 42, 40,38, 36, 34, 32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2]: 
+        for samplingDistance_x in [34, 32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2]: 
                 
                 samplingDistance_y = samplingDistance_x * 12
                 
