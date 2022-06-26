@@ -9,7 +9,7 @@ import tensorflow as tf
 from data_preparation import *
 
 
-def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
+def create_callback(trainedModelPath, EarlyStopping=False,verbose=True):
     
         """
         
@@ -185,7 +185,7 @@ def findWorkingNumBasis(N, H, n_dimensions=2, verbose=False):
                    
             if verbose:
                     print('Error : Not enough memory to create basis functions')
-                    print('try to reduce H bei 1')
+                    print('try to reduce H by 1')
                     
             numBasis = findWorkingNumBasis(N, (H-1) , n_dimensions=2)
     
@@ -280,12 +280,12 @@ def build_model(input_dim, verbose=False):
     """
     
     model = Sequential()
-    model.add(Dense(1000, input_dim = input_dim,  kernel_initializer='he_uniform', activation='relu'))
+    model.add(Dense(150, input_dim = input_dim,  kernel_initializer='he_uniform', activation='relu'))
     model.add(Dropout(rate=0.5))
     model.add(BatchNormalization())
-    model.add(Dense(1000, activation='relu'))
+    model.add(Dense(100, activation='relu'))
     model.add(Dropout(rate=0.5))
-    model.add(Dense(1000, activation='relu'))
+    model.add(Dense(100, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dense(1, activation='linear'))
     
