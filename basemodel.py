@@ -32,19 +32,19 @@ def create_callback(trainedModelPath, EarlyStopping=True,verbose=False):
             ),
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_loss", 
-                factor=0.5, patience=400, 
-                in_lr=0.0001
+                factor=0.5, patience=30, 
+                in_lr=0.01
             )]
         
         if EarlyStopping:
             callbacks.append(tf.keras.callbacks.EarlyStopping(monitor="val_loss", 
-                                                              patience=150, 
+                                                              patience=100, 
                                                               verbose=verbose))
             
         return callbacks
     
     
-def build_model(verbose=False):
+def build_model(units,verbose=False):
 
     """
 
@@ -53,17 +53,17 @@ def build_model(verbose=False):
     
     """
     model = Sequential()
-    model.add(Dense(1000, input_dim=2,  kernel_initializer='he_uniform', activation='relu'))
+    model.add(Dense(units, input_dim=2,  kernel_initializer='he_uniform', activation='relu'))
     model.add(Dropout(rate=0.5))
     model.add(BatchNormalization())
-    model.add(Dense(1000, activation='relu'))
+    model.add(Dense(units, activation='relu'))
     model.add(Dropout(rate=0.5))
-    model.add(Dense(1000, activation='relu'))
+    model.add(Dense(units, activation='relu'))
                 #model.add(Dropout(rate=0.5))
     model.add(BatchNormalization())
     model.add(Dense(1, activation='linear'))
     
-    model.compile(loss='mse', optimizer='adam', metrics=['mse','accuracy'])
+    model.compile(loss='mse', optimizer='adam', metrics=['mse','mae'])
     if verbose:
             print(model.summary())
 

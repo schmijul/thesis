@@ -272,6 +272,15 @@ def main():
     
     ## Training
     
+    
+        
+    BaseModel = bm.build_model(verbose=verbose)
+   
+    BaseModel, trainedModelPathBase = bm.train(knownPoints[['x', 'y']], knownPoints[['z']], unknownPoints[['x','y']], unknownPoints['z'],BaseModel, epochs, scenario,save_hist=save_hist, verbose=verbose)
+
+    ResultBaseModel =  bm.predict(trainedModelPathBase, unknownPoints[['x','y']])
+    
+    
     DeepKrigingModel = dk.build_model(x_trainDK.shape[1], verbose=verbose)
     
     DeepKrigingModel, trainedModelPathDK = dk.train_model(DeepKrigingModel, x_trainDK, y_trainDK, x_valDK, y_valDK, scenario, epochs, save_hist=save_hist, verbose=verbose)
@@ -294,16 +303,9 @@ def main():
     ResultDeepKriging.index = unknownPoints.index # Fix index
     
     # Base Model
-    
-    
 
     
-    BaseModel = bm.build_model(verbose=verbose)
-   
-    BaseModel, trainedModelPathBase = bm.train(knownPoints[['x', 'y']], knownPoints[['z']], unknownPoints[['x','y']], unknownPoints['z'],BaseModel, epochs, scenario,save_hist=save_hist, verbose=verbose)
 
-    ResultBaseModel =  bm.predict(trainedModelPathBase, unknownPoints[['x','y']])
-    
     # Work with Results
     
     global data

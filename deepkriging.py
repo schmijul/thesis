@@ -9,7 +9,7 @@ import tensorflow as tf
 from data_preparation import *
 
 
-def create_callback(trainedModelPath, EarlyStopping=True,verbose=True):
+def create_callback(trainedModelPath, EarlyStopping=False,verbose=True):
     
         """
         
@@ -35,13 +35,13 @@ def create_callback(trainedModelPath, EarlyStopping=True,verbose=True):
             ),
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_loss", 
-                factor=0.5, patience=20, 
-                in_lr=0.001
+                factor=0.25, patience=20, 
+                in_lr=0.01
             )]
         
         if EarlyStopping:
             callbacks.append(tf.keras.callbacks.EarlyStopping(monitor="val_loss", 
-                                                              patience=400, 
+                                                              patience=700, 
                                                               verbose=verbose))
                 
         return callbacks
@@ -284,6 +284,9 @@ def build_model(input_dim, verbose=False):
     model.add(Dropout(rate=0.5))
     model.add(BatchNormalization())
     model.add(Dense(1500, activation='relu'))
+    model.add(Dropout(rate=0.5))
+    model.add(Dense(1500, activation='relu'))
+    model.add(BatchNormalization())
     model.add(Dropout(rate=0.5))
     model.add(Dense(1500, activation='relu'))
     model.add(BatchNormalization())
