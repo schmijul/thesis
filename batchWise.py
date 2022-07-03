@@ -117,8 +117,8 @@ def prepareMap():
     
     ##wholeMap = pd.read_csv('WholeMap_Rounds_40_to_17.csv')
     
-    wholeMap = pd.read_csv('RadioEnvMaps/Back_Straight_SISO_Power_Map.csv').iloc[:30 ]
-    wholeMap = wholeMap.transpose().iloc[:30].transpose()
+    wholeMap = pd.read_csv('RadioEnvMaps/Back_Straight_SISO_Power_Map.csv')#.iloc[:30 ]
+    #wholeMap = wholeMap.transpose().iloc[:30].transpose()
     
     """
     if reduceResolution:
@@ -227,8 +227,8 @@ def calcErrors():
     keys = list(data.keys())
     for key in keys:
         
-        maes[key] = mae(unknownPoints['z'],data[key]['z'])
-        mses[key] = mse(unknownPoints['z'],data[key]['z'])
+        maes[key] = mae(stackedMap['z'],data[key]['z'])
+        mses[key] = mse(stackedMap['z'],data[key]['z'])
     
     
     f= open(f"{path}/error.txt","a+")
@@ -302,36 +302,34 @@ def main():
     
     #### Generate Results
 
-    resultsLinearInterpolation = np.zeros(len(stackedMap))
+    
     resultsKriging = np.zeros(len(stackedMap))
     resultsBaseModel = np.zeros(len(stackedMap))
     resultsDeepKriging = np.zeros(len(stackedMap))
+
+    resultsLinearInterpolation = ip.grid_interpolation(knownPoints.copy(), stackedMap.copy(), method='linear', verbose=verbose)
+    resultsLinearInterpolation.to_csv(f"LinearInterpolationResult.csv")
     
-    
-    for i in range(100,stackedMapNormalizedForDK.shape[0],100):
+    for i in range(1000,len(stackedMapNormalizedForDK),1000):
         
-        testSlice = stackedMap[['x', 'y', 'z']].iloc[i-100:i-1] # stackedMapNormalizedForDK x and y coordinates are both 0-1 min max normalized
-        testSliceDk = stackedMapNormalizedForDK[['x', 'y']].iloc[i-100:i-1]
-        
+        testSlice = stackedMap[['x', 'y', 'z']].iloc[i-1000:i-1] # stackedMapNormalizedForDK x and y coordinates are both 0-1 min max normalized
+        testSliceDk = stackedMapNormalizedForDK[['x', 'y']].iloc[i-1000:i-1]
+        #
+        # print(f"head from testslice : ", testSlice.head())
         testSliceDk = dk.wendlandkernel(testSliceDk, numBasis) # Apply Wendlandkernel to subsample of data ( as test slice)
-        print(knownPoints.head())
-        print(testSlice.head())
-        linRes = ip.grid_interpolation(knownPoints, testSlice, method='linear', verbose=verbose)
-        
-        #resultsLinearInterpolation[i-100:i-1] = linRes
-        resultsKriging[i-100:i-1] = ip.kriging_skg(knownPoints, testSlice, 10).z.to_numpy()
-        resultsBaseModel[i-100:i-1] = bm.predict(trainedModelPathBase, testSlice[['x', 'y']]).z.to_numpy()
-        resultsDeepKriging[i-100:i-1] = dk.predict(trainedModelPathDK, testSliceDk)[:,0]
         
         
-    x_test = stackedMap[['x','y']]
-    x_testDK = stackedMapNormalizedForDK[['x','y']]
+        resultsKriging[i-1000:i-1] = ip.kriging_skg(knownPoints, testSlice, 10).z.to_numpy()
+        resultsBaseModel[i-1000:i-1] = bm.predict(trainedModelPathBase, testSlice[['x', 'y']]).z.to_numpy()
+        resultsDeepKriging[i-1000:i-1] = dk.predict(trainedModelPathDK, testSliceDk)[:,0]
+        
+        #print(f" slice results deep kriging : ", resultsDeepKriging[i-100:i-1])
     
     
 
     
     
-    resultsLinearInterpolation = pd.DataFrame([resultsLinearInterpolation, stackedMap['x'].to_numpy(),stackedMap['y'].to_numpy()]).transpose()
+    
     resultsLinearInterpolation.columns = ['z','x','y']
     resultsLinearInterpolation = resultsLinearInterpolation[['x','y','z']]
     resultsLinearInterpolation.index = stackedMap.index
@@ -382,7 +380,7 @@ def main():
     ## Create Path to store results/ figures etc..
     
     global path
-    path = f'/home/schmijul/source/repos/thesis/newplots/main/{scenario}/'
+    path = f'newplots/main/{scenario}/'
     
     if not os.path.exists(path):
             os.makedirs(path)
@@ -412,10 +410,10 @@ def main():
             minValue = data[key]['z'].min()
         
     for key in list(data.keys()):   
-        pu.generateHeatMaps({key:data[key]},stackedMap, knownPoints, unknownPoints, maxValue, minValue, 0,path +f'{key}.png')
+        pu.generateHeatMaps({key:data[key]},stackedMap, knownPoints, stackedMap, maxValue, minValue, 0,path +f'{key}.png')
         
         
-    pu.generateHeatMaps(data,stackedMap, knownPoints,unknownPoints, maxValue, minValue, 1,path+'heatmaps.png')
+    pu.generateHeatMaps(data,stackedMap, knownPoints,stackedMap, maxValue, minValue, 1,path+'heatmaps.png')
     
     maxError = 0
     
@@ -442,11 +440,11 @@ if __name__ == '__main__':
     interpolateWholeMap = 0
     random = 0
     length = None
-    epochs = 2
+    epochs = 1800
     reduceResolution = 0
     verbose = 1
     save_hist = 0
-    units = 1500 # Base Model units per Dense Layer
+    units = 2000  # Base Model units per Dense Layer
     
     for interpolateWholeMap in [1]:
         
