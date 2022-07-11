@@ -2,8 +2,7 @@ matplotlib
 seaborn
 pandas
 scikit-learn
-pykrige
 scikit-gstat
-GPy
 tensorflow
 pytest
+pylint

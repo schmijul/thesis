@@ -1,39 +1,50 @@
-# Stufy Thesis Repo
+# student thesis : estimation of high resolution radio maps
 
-## Setup
-To Run all the cripts it's easiest to clone the entire Repo
-
-
-    git clone git@github.com:JulianSchmidt96/thesis.git
-
-    cd thesis
-
-## Install Dependencies
-Since a few different Libraries are used in the thesis, it's easiest to install them all at once.
+ This repo features a few scripts for spatial interpoaltion and deep learning methods for estimating radio maps
 
 
-    pip3 install -r requirements.txt
+ ### To get started :
+ 
+ Since a few different libraries are used, you need to install them first.
 
-## Run Tests
+ run:
+    ```
+    pip install -r requirements.txt
+    ```
+### Pipeline
 
-Since a lot of debbuging happened I created a script named test_fct.py, which tests a few of the main data processing functions.
-To Run it type:
+The pipeline is divided into two parts.
 
-    pytest
+#### Code Quality Check
+
+This part checks the quality of the code using pylint.
+
+The Pipeline will only accept pull request with a 9/10 or higher code quality rating.
+
+#### Unit Tests
+
+This part will check if the main data processing Functions still work
+
+### Interpolation
+
+To use basic interpolation techniques on griddata and kriging we use the functions stored in *interpolation_uitls.py*
+
+The script interpolation uses said functions to estimates either specific points or the entire map based on a few known points.
+
+##### Linear Interpolation
+
+Interpolation on griddata is handled by scipys *griddata* function.
+
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html
+
+Here it is mostly used to handle linear interpolation, but cubic or higher interpolyation polynoms are also possible.
+
+##### Kriging
+
+To handle kriging we use the scikit-geostats package.
+
+https://scikit-gstat.readthedocs.io/en/latest/
+
+This library is supports the creation of variograms, regressionvariograms and execute ordinary kriging with a given variogram.
 
 
-If everything works pytest will show something like this:
-
-![alt text](pictures/pytest.png "Title")
-
-
-## Generate Heatmaps and calculate Erros
-
-The script main.py will perfom Linear Interpolation, Kriging and it will also train a deep Kriging Model and a Base Model with around 2 mio trainable parameters.
-
-It will then plot the results on Heatmaps and will calculate the MAE and the MSE for each interpolation/prediction and store them in a txt file.
-
-to Run it type:
-
-    python3 main.py
-    
