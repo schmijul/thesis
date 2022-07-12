@@ -20,7 +20,7 @@ jobs:
         pip install -r requirements.txt
     - name: Analysing the code with pylint
       run: 
-        pylint --fail-under=8 $(git ls-files '*.py') --disable=missing-docstring --disable=protected-access --disable=W0603 --disable=W0601
+        pylint --fail-under=9 $(git ls-files '*.py') --disable=missing-docstring --disable=protected-access --disable=W0603 --disable=W0601
 
     - name: unit test
       run: 

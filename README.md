@@ -48,3 +48,14 @@ https://scikit-gstat.readthedocs.io/en/latest/
 This library is supports the creation of variograms, regressionvariograms and execute ordinary kriging with a given variogram.
 
 
+
+#### Machine Learning
+
+All machine learning/ deep learning tasks are handled by tensorflow & keras.
+
+There are two scripts for this one named *basemodel.py*.
+This one will create a model name basemdoel which uses x and y coordinates as an input and is trained to predict one numerical value as an output.
+
+The other one is *deepkriging.py* which will apply the wendland kernel onto a given dataset, which will create more than just two input dimensions.
+note:
+This can cause hughe amount of trainable parameters and memory usage.
