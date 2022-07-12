@@ -7,7 +7,6 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization
 import tensorflow as tf
 
-
 import basemodel as bm
 def minmax(array, array_max, array_min):
 
