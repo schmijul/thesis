@@ -67,7 +67,6 @@ def multipleheatmaps_nobasemap(data, maxvalue, minvalue,fig_size=(16,7),cmap='vi
             minvalue (float): minimum value of the heatmap scala
     """
     keys = list(data.keys())
-    figsize=figsize
 
     plt.figure(figsize=fig_size)
 
