@@ -1,15 +1,12 @@
-import os
-
 import pandas as pd
 
 import deepkriging as dk
-import interpolation_utils
 import datapreparation as dp
 
 
 whole_map = pd.read_csv('reference.csv')
 
-      
+
 def test_stack_map():
     """
     check if the map is stacked correctly

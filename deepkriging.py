@@ -206,6 +206,7 @@ def wendlandkernel(points, numbasis):
     ##Wendland kernel
 
     basis_size = 0
+
     # Create matrix of shape N x number_of_basis_functions
     # Use np.float32 to save memory
 
@@ -218,7 +219,7 @@ def wendlandkernel(points, numbasis):
         theta = 1/np.sqrt(numbasis[res])*2.5
         knots_x, knots_y = np.meshgrid(knots_1dx[res],knots_1dy[res])
         knots = np.column_stack((knots_x.flatten(),knots_y.flatten()))
-
+        print(f"first 10 elements of knots for res : {res} : {knots[:10,:]}")
         for i in range(int(numbasis[res])):
 
             d = np.linalg.norm(np.vstack((points.y,points.x)).T-knots[i,:],axis=1)/theta
@@ -386,6 +387,8 @@ if __name__ == '__main__':
     print(num_basis)
     expected =  [10**2,19**2,37**2]
     print(expected)
+    
+    
 
     if num_basis == expected:
         print('from deepkriging.py: findworkingnumbasis: OK')
