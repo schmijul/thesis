@@ -170,25 +170,24 @@ def randomsampling(uniformmap, len_sample, include_corners=True):
         corner_point_2 = uniformmap[uniformmap.x == uniformmap.x.min() ][ uniformmap.y ==  uniformmap.y.max()]
         corner_point_3 = uniformmap[uniformmap.x == uniformmap.x.max() ][ uniformmap.y ==  uniformmap.y.min()]
         corner_point_4 = uniformmap[uniformmap.x == uniformmap.x.max() ][ uniformmap.y ==  uniformmap.y.max()]
-        
+
         corner_points = pd.concat([corner_point_1,
                            corner_point_2,
                            corner_point_3,
                            corner_point_4])
-        
+
         # Drop corner_points from uniformmap
         uniformmap = uniformmap.drop(corner_points.index)
-        
+
         # Randomsampling on rest of uniformmap
-        randommap = uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample)]
-        
-        # Add corner_points to randommap
-        
-        randommap= randommap.merge(corner_points, how='outer')
-    
-    else:
         randommap = uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample-4)]
-        
+
+        # Add corner_points to randommap
+
+        randommap= randommap.merge(corner_points, how='outer')
+
+    else:
+        randommap = uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample)]
 
     return randommap
 
