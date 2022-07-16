@@ -1,5 +1,7 @@
+import math
 import numpy as np
 import pandas as pd
+
 
 def stackmap(wholemap):
 
@@ -141,7 +143,7 @@ def resample(entiremap, sampling_distance_x, sampling_distance_y, verbose=False)
     return known_points, unknown_points
 
 
-def randomsampling(uniformmap, len_sample):
+def randomsampling(uniformmap, len_sample, include_corners=True):
 
     """
     _summary_
@@ -160,15 +162,273 @@ def randomsampling(uniformmap, len_sample):
         return False
 
     # Fct begins here
+    
+    if include_corners:
 
-    return uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample)]
+        # First collect all the corner points
+        corner_point_1 = uniformmap[uniformmap.x == uniformmap.x.min() ][ uniformmap.y ==  uniformmap.y.min()]
+        corner_point_2 = uniformmap[uniformmap.x == uniformmap.x.min() ][ uniformmap.y ==  uniformmap.y.max()]
+        corner_point_3 = uniformmap[uniformmap.x == uniformmap.x.max() ][ uniformmap.y ==  uniformmap.y.min()]
+        corner_point_4 = uniformmap[uniformmap.x == uniformmap.x.max() ][ uniformmap.y ==  uniformmap.y.max()]
 
+        corner_points = pd.concat([corner_point_1,
+                           corner_point_2,
+                           corner_point_3,
+                           corner_point_4])
+
+        # Drop corner_points from uniformmap
+        uniformmap = uniformmap.drop(corner_points.index)
+
+        # Randomsampling on rest of uniformmap
+        randommap = uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample-4)]
+
+        # Add corner_points to randommap
+
+        randommap= randommap.merge(corner_points, how='outer')
+
+    else:
+        randommap = uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample)]
+
+    return randommap
+
+
+
+def minmax(array, array_max, array_min):
+    
+    """
+    _summary_
+    Args:
+        array ([np.array or pandas df]):
+        array_max ([float]):maxval
+        array_min ([float]): minval
+
+    Returns:
+        [np.array or pandas df]: 0-1, minmax normalized array
+    """
+
+    return (array-array_min)/(array_max-array_min)
+
+def reminmax(array, array_max, array_min):
+
+    """
+    _summary_
+    Args:
+        array ([np.array or pandas df]):
+        array_max ([float]):maxval
+        array_min ([float]): minval
+
+    Returns:
+        [np.array or pandas df]: 0-1, minmax renormalized array
+    """
+
+    return array * (array_max-array_min) + array_min
+
+def normalize_data(map_not_normalized, known_points, unknown_points):
+
+    """
+
+    _summary_
+
+        Args:
+            map_not_normalized (pandas DataFrame) : map with all points in x,y,z format
+
+        Returns:
+            map minmax normalized
+            normvals
+
+    """
+
+    maxvals = {'x': map_not_normalized['x'].max(),
+               'y': map_not_normalized['y'].max(),
+               'z': map_not_normalized['z'].max()}
+
+    minvals = {'x': map_not_normalized['x'].min(),
+               'y': map_not_normalized['y'].min(),
+               'z': map_not_normalized['z'].min()}
+
+    map_normalized = pd.DataFrame()
+    for col in known_points.columns:
+
+        known_points[col] = minmax(known_points[col], maxvals[col], minvals[col])
+        unknown_points[col] = minmax(unknown_points[col], maxvals[col], minvals[col])
+        map_normalized[col] = minmax(map_not_normalized[col], maxvals[col], minvals[col])
+
+    return map_normalized,known_points, unknown_points, maxvals, minvals
+
+
+def calc_h_for_num_basis(number_points, n_dimensions=2, verbose=False):
+
+
+    """
+        _summary_
+
+        Args:
+            number_points (int) : number of points
+            n_dimensions (int, optional) : Dimensions of points  Defaults to 2 (x,y).
+            verbose(bool): show H
+
+        Returns:
+            h_for_num_basis (float
+
+        _description_
+            This Function calculates the Number of Elements in num_basis)
+
+    """
+
+    h_for_num_basis = 1 + (np.log2( number_points**(1/n_dimensions) / 10 ))
+
+    if verbose:
+        print("H: ", h_for_num_basis)
+
+    return math.ceil(h_for_num_basis)
+
+
+def get_numbasis(num_elements , n_dimensions=2, verbose=False):
+
+    """
+      _summary_
+
+            Args:
+                N (int) : number of points
+                num_elements (float) : ( Number of Elements in num_basis)
+                n_dimensions: number of dimensions of the coordinates
+
+            Returns:
+                num_basis (list): list of number of basis functions for each dimension
+
+    _description_
+
+            This function returns a list of number of basis functions for each dimension
+            as descriped in : " https://arxiv.org/pdf/2007.11972.pdf " on page 12
+
+
+
+    """
+
+
+    numbasis = []
+
+    for i in range(1,int(num_elements+1)):
+        k = (9 * 2**(i-1) + 1 )
+        numbasis.append(int(k)**n_dimensions)
+
+    if verbose:
+        print(f"amount base fct: {sum(numbasis)}")
+    return numbasis
+
+
+def findworkingnumbasis(len_data, num_elements, n_dimensions=2, verbose=False):
+
+    """
+    _summary_
+
+        Args:
+            len_data (int) : number of points
+            num_elements (float) : ( Number of Elements in num_basis)
+            n_dimensions (int, optional) : Dimensions of points  Defaults to 2 (x,y).
+            verbose (bool): show info about recursion
+
+        Returns:
+            numbasis (list): list of number of basis functions for each dimension
+
+    _description_
+            Because the number of basis functions will become very high for a hugh Data set,
+            this function will check recursively,
+            if the number of basis functions is too high
+            this fct will decrease the number of basis functions
+            until it is below the maximum number of basis functions.
+
+    """
+
+    # Create ArrayMemoryError class to catch a custom exception
+    # ArrayMemoryError is a numpy specific exception)
+    class ArrayMemoryError(Exception):
+        pass
+
+    try:
+        numbasis = get_numbasis( num_elements, n_dimensions, verbose)
+
+        testvariable = np.zeros((len_data, int(sum(numbasis))),dtype=np.float32)
+        del testvariable    # delete testvariable to free up memory
+
+
+
+    except np.core._exceptions._ArrayMemoryError:
+        if verbose:
+            print('Error : Not enough memory to create basis functions')
+            print('try to reduce H by 1')
+
+            numbasis = findworkingnumbasis(len_data, (num_elements-1) , n_dimensions=2)
+
+    return numbasis
+
+def wendlandkernel(points, numbasis):
+
+    """
+    _summary_
+
+        Args:
+            points (pandas DataFrame) : cordinnates in format x, y
+            numbasis (int): number of basis functions
+        Returns:
+            phi (pandas DataFrame): matrix of shape N x number_of_basis_functions
+
+    _description_
+
+        This funkction applies the wendlandkernel to a set of points
+        and returns a matrix of shape Nxnumber_of_basis_functions
+        typicalls x and y represented all points in the entire map
+
+    """
+
+    # Fct begins here
+
+
+
+
+    knots_1dx = [np.linspace(0,1,int(np.sqrt(i))) for i in numbasis]
+    knots_1dy = [np.linspace(0,1,int(np.sqrt(i))) for i in numbasis]
+
+    ##Wendland kernel
+
+    basis_size = 0
+
+    # Create matrix of shape N x number_of_basis_functions
+    # Use np.float32 to save memory
+
+    phi = np.zeros((len(points), int(sum(numbasis))),dtype=np.float32)
+
+
+
+    for res in range(len(numbasis)):
+
+        theta = 1/np.sqrt(numbasis[res])*2.5
+        knots_x, knots_y = np.meshgrid(knots_1dx[res],knots_1dy[res])
+        knots = np.column_stack((knots_x.flatten(),knots_y.flatten()))
+        for i in range(int(numbasis[res])):
+
+            d = np.linalg.norm(np.vstack((points.x, points.y)).T-knots[i,:],axis=1)/theta
+
+            for j in range(len(d)):
+
+                if d[j] >= 0 and d[j] <= 1:
+
+                    phi[j,i + basis_size] = (1-d[j])**6 * (35 * d[j]**2 + 18 * d[j] + 3)/3
+
+                else:
+
+                    phi[j,i + basis_size] = 0
+
+        basis_size = basis_size + numbasis[res]
+        print(res)
+    return pd.DataFrame(phi)
 
 if __name__ == '__main__':
 
-    whole_map = pd.read_csv(('testdata/testMap.csv'))
-
-    map_stacked = preparemap(whole_map, start_point=0, length=700)[1]
-
-    if map_stacked.equals(pd.read_csv('testdata/stackedmap.csv')[['x', 'y', 'z']]):
-        print('from datapreparation.py: preparemap: OK')
+    
+    normalized_map = pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map_normalized.csv').iloc[:50]
+        
+    testwendland = wendlandkernel(normalized_map[['x', 'y']],get_numbasis(7))
+    np.save('testwendland.npy', testwendland)
+    test=0
+    
