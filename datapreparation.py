@@ -187,7 +187,7 @@ def randomsampling(uniformmap, len_sample, include_corners=True):
         randommap= randommap.merge(corner_points, how='outer')
     
     else:
-        randommap = uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample)]
+        randommap = uniformmap.loc[np.random.choice(uniformmap.index, size=len_sample-4)]
         
 
     return randommap
