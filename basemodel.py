@@ -6,7 +6,7 @@ import pandas as pd
 
 
 
-def create_callbacks(trainedmodelpath, earlystopping=False,verbose=True):
+def create_callbacks(trainedmodelpath, earlystopping=True,verbose=True):
 
     """
 
@@ -158,7 +158,8 @@ def predict(trainedmodelpath, x_val):
 
 if __name__ == '__main__':
 
-    #test if model build is working
+    #test if model building is working
+
     UNITS = 100
     TESTMODEL = build_model(UNITS,verbose=True)
     

@@ -405,6 +405,7 @@ def wendlandkernel(points, numbasis):
         theta = 1/np.sqrt(numbasis[res])*2.5
         knots_x, knots_y = np.meshgrid(knots_1dx[res],knots_1dy[res])
         knots = np.column_stack((knots_x.flatten(),knots_y.flatten()))
+
         for i in range(int(numbasis[res])):
 
             d = np.linalg.norm(np.vstack((points.x, points.y)).T-knots[i,:],axis=1)/theta
