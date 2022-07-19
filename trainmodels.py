@@ -1,3 +1,4 @@
+import tensorflow as tf 
 import pandas as pd
 import datapreparation as dp
 import deepkriging as dk
@@ -34,7 +35,7 @@ def normalizedata():
     """
     # minmax normalize the data
     global  STACKEDMAP_NORMALIZED, KNOWNPOINTS_NORMALIZED, UNKNOWNPOINTS_NORMALIZED, MAXVALS, MINVALS
-    STACKEDMAP_NORMALIZED, KNOWNPOINTS_NORMALIZED, UNKNOWNPOINTS_NORMALIZED, MAXVALS, MINVALS = dk.normalize_data(STACKEDMAP.copy(),
+    STACKEDMAP_NORMALIZED, KNOWNPOINTS_NORMALIZED, UNKNOWNPOINTS_NORMALIZED, MAXVALS, MINVALS = dp.normalize_data(STACKEDMAP.copy(),
                                                                                                                   KNOWNPOINTS.copy(),
                                                                                                                   UNKNOWNPOINTS.copy())
 
@@ -50,9 +51,9 @@ def get_wendlandparams():
 
 
 
-    numelements = dk.calc_h_for_num_basis(len(STACKEDMAP)) # Calculate the number of basis functions
+    numelements = dp.calc_h_for_num_basis(len(STACKEDMAP)) # Calculate the number of basis functions
 
-    NUMBASIS = dk.get_numbasis(numelements) # Calculate the number of basis functions
+    NUMBASIS = dp.get_numbasis(8) # Calculate the number of basis functions
 
 
 def main():
@@ -68,14 +69,31 @@ def main():
     get_wendlandparams()
 
     x_train = KNOWNPOINTS_NORMALIZED[['x', 'y']]
-    y_train = KNOWNPOINTS_NORMALIZED['z']
+    y_train = KNOWNPOINTS['z']
 
 
     x_val = UNKNOWNPOINTS_NORMALIZED[['x', 'y']]
-    y_val = UNKNOWNPOINTS_NORMALIZED['z']
+    y_val = UNKNOWNPOINTS['z']
 
     basemodel = bm.build_model(2000)
-    print('start training')
+    
+
+    deepkrigingmodel = dk.build_model(sum(NUMBASIS))
+
+    print('start training ..')
+    dk.train_model(deepkrigingmodel,
+                   dp.wendlandkernel(x_train, NUMBASIS),
+                   y_train,
+                   dp.wendlandkernel(x_val, NUMBASIS),
+                   y_val,
+                   scenario,
+                   EPOCHS,
+                   batch_size=100,
+                   save_hist=True,
+                   verbose=0)
+    print('finished training deepkrigingmodel')
+
+  
     bm.train(x_train,
              y_train,
              x_val,
@@ -88,20 +106,8 @@ def main():
              batch_size=100)
 
     print('finished training basemodel')
-    deepkrigingmodel = dk.build_model(sum(NUMBASIS))
 
-    dk.train_model(deepkrigingmodel,
-                   dk.wendlandkernel(x_train, NUMBASIS),
-                   y_train,
-                   dk.wendlandkernel(x_val, NUMBASIS),
-                   y_val,
-                   scenario,EPOCHS,
-                   batch_size=100,
-                   save_hist=False,
-                   verbose=VERBOSE)
-
-    print('finished training deepkrigingmodel')
-
+    
 if __name__ == '__main__':
 
     # def globals at module level
@@ -122,7 +128,7 @@ if __name__ == '__main__':
     VERBOSE = 0
 
     for random in [1]:
-        for samplingdistance in range(28,0,-4):
+        for samplingdistance in [12,8,4]:
             print(f"random: {random}, samplingdistance: {samplingdistance}")
-            scenario = f'Main_Straight_SISO_Power_Map_samplingDistance-{samplingdistance}-random-{random}'
+            scenario = f'Main_Straight_SISO_Power_Map_samplingDistance-{samplingdistance}-random-{random}_notnormalized'
             main()
