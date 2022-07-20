@@ -1,3 +1,4 @@
+import tensorflow as tf 
 import pandas as pd
 import datapreparation as dp
 import deepkriging as dk
@@ -49,7 +50,6 @@ def get_wendlandparams():
 
 
 
-
     #numelements = dp.calc_h_for_num_basis(len(STACKEDMAP)) # Calculate the number of basis functions
 
     NUMBASIS = dp.get_numbasis(8) # Calculate the number of basis functions
@@ -69,7 +69,7 @@ def main():
 
     x_train = KNOWNPOINTS_NORMALIZED[['x', 'y']]
     y_train = KNOWNPOINTS['z']
-    print(f"len xtrain = {len(x_train)}")
+
 
     print(f" type unknown points normalized : {type(UNKNOWNPOINTS_NORMALIZED)}")
     x_val = UNKNOWNPOINTS_NORMALIZED[['x', 'y']]
@@ -108,6 +108,7 @@ def main():
     print('finished training basemodel')
 
 
+    
 if __name__ == '__main__':
 
     # def globals at module level
@@ -127,8 +128,10 @@ if __name__ == '__main__':
     LENGTH = None
     VERBOSE = 0
 
+
     for random in [0]:
         for samplingdistance in range(20,4,-4):
+
             print(f"random: {random}, samplingdistance: {samplingdistance}")
             scenario = f'Main_Straight_SISO_Power_Map_samplingDistance-{samplingdistance}-random-{random}_notnormalized'
             main()
