@@ -430,3 +430,15 @@ def wendlandkernel(points, numbasis):
         print(res)
     return pd.DataFrame(phi)
 
+<<<<<<< HEAD
+=======
+if __name__ == '__main__':
+
+
+    normalized_map = pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map_normalized.csv').iloc[:50]
+        
+    testwendland = wendlandkernel(normalized_map[['x', 'y']],get_numbasis(7))
+    np.save('testwendland.npy', testwendland)
+    test=0
+    
+>>>>>>> ebd18110118320976939e2d11777ed6219418032
