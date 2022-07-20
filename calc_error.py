@@ -75,36 +75,43 @@ def main():
                'basemodel': load_basemodelprediction(DIST,samplingorder=SAMPLINGORDER),
                'dkmodel': load_dkmodel(DIST,samplingorder=SAMPLINGORDER)}
 
-    path = f'results/plots/interpolate_wholemap/main_straigh_siso/dist-{DIST}_samplingorder-{SAMPLINGORDER}'
-    print(DIST)
-    if not os.path.exists(path):
-        os.makedirs(path)
+    
+    # Reminmax of machine learning predictions
 
-
+    for col in results['basemodel'].columns:
+        
+        results['basemodel'][col] = dp.reminmax(results['basemodel'][col],
+                                             originalmap[col].max(),
+                                             originalmap[col].min())
+        results['dkmodel'][col] = dp.reminmax(results['dkmodel'][col],
+                                           originalmap[col].max(),
+                                           originalmap[col].min())
+        knownpoints[col] = dp.reminmax(knownpoints[col],
+                                       originalmap[col].max(),
+                                       originalmap[col].min())
+        unknownpoints[col] = dp.reminmax(unknownpoints[col],
+                                         originalmap[col].max(),
+                                         originalmap[col].min())
+        
     # Plotting
-
-    for key in list(results.keys()):
-        pu.generateheatmaps({key:results[key]},
-                            originalmap,
-                            knownpoints,
-                            originalmap,
-                            originalmap['z'].max(),
-                            originalmap['z'].min(),
-                            0,
-                            path +f'/{key}.png')
-
-    pu.generateheatmaps(results,
-                        originalmap,
-                        knownpoints,
-                        originalmap,
-                        originalmap['z'].max(),
-                        originalmap['z'].min(),
-                        1,
-                        path+'/heatmaps.png')
-
-
+    maes={}
+    mses={}
+    for prediction in list(results.keys()):
+        
+        prediction = results[prediction]['z']
+        truth = originalmap['z']
+        
+        mae = np.mean(np.abs(prediction - truth))
+        mse = np.mean(np.square(prediction - truth))
+        
+        maes[prediction] = [mae]
+        mses[prediction] = [mse]
+    pd.DataFrame(maes).to_csv(f'maes_dist-{DIST}_{SAMPLINGORDER}.csv')
+    pd.DataFrame(mses).to_csv(f'mses_dist-{DIST}_{SAMPLINGORDER}.csv')
+    
+    
 if __name__ == '__main__':
-
-    for DIST in [4, 8, 12, 16]:
+    
+    for DIST in [16]:
         for SAMPLINGORDER in ['random']:
              main()

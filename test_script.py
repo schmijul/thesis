@@ -39,11 +39,11 @@ def test_randomsampling():
     check if randomly sampled data hast the correct shape
     """
     expected = len(known_points)
-    assert len(dp.randomsampling(stackedmap, len(known_points))) == expected
+    assert len(dp.randomsampling(stackedmap, len(known_points),SAMPLINGDIST_X)) == expected
 
 
 def test_findworkingnumbasis():
     numcoords =  900
     numelementsbas = 4
     expected =  [10**2,19**2,37**2,73**2]
-    assert dk.findworkingnumbasis(numcoords,numelementsbas) == expected
+    assert dp.findworkingnumbasis(numcoords,numelementsbas) == expected

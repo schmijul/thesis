@@ -24,7 +24,7 @@ def preparemap():
 
     if random:
 
-        KNOWNPOINTS = dp.randomsampling(STACKEDMAP.copy(), len(KNOWNPOINTS))
+        KNOWNPOINTS = dp.randomsampling(STACKEDMAP.copy(), len(KNOWNPOINTS), samplingdistance)
 
 
 
@@ -50,8 +50,7 @@ def get_wendlandparams():
 
 
 
-
-    numelements = dp.calc_h_for_num_basis(len(STACKEDMAP)) # Calculate the number of basis functions
+    #numelements = dp.calc_h_for_num_basis(len(STACKEDMAP)) # Calculate the number of basis functions
 
     NUMBASIS = dp.get_numbasis(8) # Calculate the number of basis functions
 
@@ -72,11 +71,12 @@ def main():
     y_train = KNOWNPOINTS['z']
 
 
+    print(f" type unknown points normalized : {type(UNKNOWNPOINTS_NORMALIZED)}")
     x_val = UNKNOWNPOINTS_NORMALIZED[['x', 'y']]
     y_val = UNKNOWNPOINTS['z']
 
     basemodel = bm.build_model(2000)
-    
+
 
     deepkrigingmodel = dk.build_model(sum(NUMBASIS))
 
@@ -93,7 +93,7 @@ def main():
                    verbose=0)
     print('finished training deepkrigingmodel')
 
-  
+
     bm.train(x_train,
              y_train,
              x_val,
@@ -106,6 +106,7 @@ def main():
              batch_size=100)
 
     print('finished training basemodel')
+
 
     
 if __name__ == '__main__':
@@ -127,8 +128,10 @@ if __name__ == '__main__':
     LENGTH = None
     VERBOSE = 0
 
-    for random in [1]:
-        for samplingdistance in [12,8,4]:
+
+    for random in [0]:
+        for samplingdistance in range(20,4,-4):
+
             print(f"random: {random}, samplingdistance: {samplingdistance}")
             scenario = f'Main_Straight_SISO_Power_Map_samplingDistance-{samplingdistance}-random-{random}_notnormalized'
             main()
