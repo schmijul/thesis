@@ -55,7 +55,7 @@ def gridinterpolation(knownpoints, unknownpoints, method='linear', verbose=False
 
     xx_grid, yy_grid = np.mgrid[x_values.min():x_values.max()+1:stepsize_x,
                       y_values.min():y_values.max()+1:stepsize_y]
-    print(xx_grid.shape)
+
     if verbose:
         print(f'created grid with shape {xx_grid.shape}')
         print(f'xx_grid min = {xx_grid.min()}')

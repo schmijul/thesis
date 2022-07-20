@@ -143,7 +143,7 @@ def resample(entiremap, sampling_distance_x, sampling_distance_y, verbose=False)
     return known_points, unknown_points
 
 
-def randomsampling(uniformmap, len_sample, include_corners=True):
+def randomsampling(uniformmap, len_sample, dist, include_corners=True):
 
     """
     _summary_
@@ -163,6 +163,10 @@ def randomsampling(uniformmap, len_sample, include_corners=True):
 
     # Fct begins here
     
+    # Set np random seed to dist:
+
+    np.random.seed(dist)
+
     if include_corners:
 
         # First collect all the corner points
@@ -194,7 +198,7 @@ def randomsampling(uniformmap, len_sample, include_corners=True):
 
 
 def minmax(array, array_max, array_min):
-    
+
     """
     _summary_
     Args:
@@ -357,6 +361,8 @@ def findworkingnumbasis(len_data, num_elements, n_dimensions=2, verbose=False):
         if verbose:
             print('Error : Not enough memory to create basis functions')
             print('try to reduce H by 1')
+            
+            print(f"exception : { np.core._exceptions._ArrayMemoryError}")
 
             numbasis = findworkingnumbasis(len_data, (num_elements-1) , n_dimensions=2)
 
@@ -424,12 +430,3 @@ def wendlandkernel(points, numbasis):
         print(res)
     return pd.DataFrame(phi)
 
-if __name__ == '__main__':
-
-    
-    normalized_map = pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map_normalized.csv').iloc[:50]
-        
-    testwendland = wendlandkernel(normalized_map[['x', 'y']],get_numbasis(7))
-    np.save('testwendland.npy', testwendland)
-    test=0
-    
