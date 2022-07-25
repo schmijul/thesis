@@ -1,8 +1,11 @@
+import os
 import pandas as pd
 import datapreparation as dp
 import deepkriging as dk
 import basemodel as bm
-
+import tensorflow as tf
+import numpy as np
+import interpolation_utils as iu
 def preparemap():
 
     """
@@ -52,7 +55,8 @@ def get_wendlandparams():
 
     #numelements = dp.calc_h_for_num_basis(len(STACKEDMAP)) # Calculate the number of basis functions
 
-    NUMBASIS = dp.get_numbasis(8) # Calculate the number of basis functions
+    NUMBASIS = dp.get_numbasis(7) # Calculate the number of basis functions
+
 
 
 def main():
@@ -69,9 +73,9 @@ def main():
 
     x_train = KNOWNPOINTS_NORMALIZED[['x', 'y']]
     y_train = KNOWNPOINTS['z']
-    print(f"len xtrain = {len(x_train)}")
+    
 
-    print(f" type unknown points normalized : {type(UNKNOWNPOINTS_NORMALIZED)}")
+
     x_val = UNKNOWNPOINTS_NORMALIZED[['x', 'y']]
     y_val = UNKNOWNPOINTS['z']
 
@@ -79,8 +83,8 @@ def main():
 
 
     deepkrigingmodel = dk.build_model(sum(NUMBASIS))
-
-    print('start training ..')
+    
+    
     dk.train_model(deepkrigingmodel,
                    dp.wendlandkernel(x_train, NUMBASIS),
                    y_train,
@@ -90,8 +94,8 @@ def main():
                    EPOCHS,
                    batch_size=100,
                    save_hist=True,
-                   verbose=0)
-    print('finished training deepkrigingmodel')
+                   verbose=1)
+
 
 
     bm.train(x_train,
@@ -105,7 +109,47 @@ def main():
              verbose=VERBOSE,
              batch_size=100)
 
-    print('finished training basemodel')
+
+    
+    # Predictions
+    
+    # Load best dk model:
+    
+    dk_model = tf.keras.models.load_model(f'trainedModels/deepkriging/{scenario}/best_model.h5')
+    print('a')
+    dk_prediction = dk_model.predict(dp.wendlandkernel(STACKEDMAP_NORMALIZED,NUMBASIS))[:,0]
+    print('b')
+    
+    bm_model = tf.keras.models.load_model(f'trainedModels/baseModel/{scenario}/best_model.h5')
+
+    bm_prediction = bm_model.predict(STACKEDMAP_NORMALIZED[['x', 'y']])[:,0]
+
+    # Save predictions:
+    
+    # create cenario directory
+    
+    if not os.path.exists(f'slicedPredictions/{scenario}'):
+        os.makedirs(f'slicedPredictions/{scenario}')
+
+    np.save(f'slicedPredictions/{scenario}/dk_prediction.npy', dk_prediction)
+
+    np.save(f'slicedPredictions/{scenario}/bm_prediction.npy', bm_prediction)
+    
+    
+    # Linear interpolation:
+    
+    results_linear_interploation = iu.gridinterpolation(KNOWNPOINTS,
+                                                        STACKEDMAP,
+                                                        method='linear',
+                                                        verbose=0)
+    
+    np.save(f'slicedPredictions/{scenario}/linear_interpolation.npy', results_linear_interploation)
+    
+    # Kriging
+
+    results_kriging = iu.kriging(KNOWNPOINTS, STACKEDMAP)
+     
+    np.save(f'slicedPredictions/{scenario}/kriging.npy', results_kriging)
 
 
 if __name__ == '__main__':
@@ -121,16 +165,20 @@ if __name__ == '__main__':
     UNKNOWNPOINTS_NORMALIZED = None
     MAXVALS = None
     MINVALS = None
-    NUMBASIS = None
+    NUMBASIS = None 
 
-    EPOCHS = 2000
+    EPOCHS = 2
     LENGTH = None
     VERBOSE = 0
-    for i in []:
-        startpoint = i*92,
+    for i in [1,3,5,7,9]:
+        startpoint = i*92
         endpoint = (i+1)*92
-    for random in [1,0]:
-        for samplingdistance in range(20,4,-4):
-            print(f"random: {random}, samplingdistance: {samplingdistance}")
-            scenario = f'slice_from-{startpoint}_to-{endpoint}-{samplingdistance}-random-{random}_notnormalized'
-            main()
+        
+        print(f"startpoint = {startpoint}")
+        print(f"endpoint = {endpoint}")
+        for random in [1,0]:
+            for samplingdistance in range(8,4,-4):
+
+                print(f"random: {random}, samplingdistance: {samplingdistance}")
+                scenario = f'slice_from-{startpoint}_to-{endpoint}-{samplingdistance}-random-{random}_notnormalized'
+                main()
