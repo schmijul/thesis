@@ -164,11 +164,13 @@ def wendlandkernel(inputs):
 if __name__ == "__main__":
     
     
-    H = 5
+    H = 3
     
-    POINTS_X = np.linspace(0, 1, 10000)
-    POINTS_Y = np.linspace(0, 1, 10000)
-    NUM_PROCESSES =  mp.cpu_count() *5
+    NUMPOINTS = 10000
+    
+    POINTS_X = np.linspace(0, 1, NUMPOINTS)
+    POINTS_Y = np.linspace(0, 1, NUMPOINTS)
+    NUM_PROCESSES =  mp.cpu_count() * NUMPOINTS / 100
 
 
     
