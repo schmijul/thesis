@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import pandas as pd
+
 
 
 def gen_multivariate_normal(cov,verbose=0):
@@ -93,7 +95,6 @@ def distance(x1, y1, x2, y2):
 def pathloss(d, eta):
     return 10.0 * eta * np.log10(d+1.0) #+1: to avoid diverse of path loss
 
-
 def OLS(d, p):
     '''Ordinary Least Squares for Path Loss Modeling'''
     A       = np.vstack([-10.0*np.log10(d+1.0), np.ones(len(p))]).T
@@ -101,58 +102,51 @@ def OLS(d, p):
     return m, c
 
 
+def create_grid(x_min, x_max, y_min, y_max):
 
-if __name__=="__main__":
+    x = [x/100 for x in range(x_min,x_max+1)]#np.linspace(0, LEN_AREA, N)
+    y = [y/100 for y in range(y_min,y_max+1)]#np.linspace(0, LEN_AREA, N)
+    xx, yy = np.meshgrid(x, y)
+    
+    return xx, yy
 
-    '''measurement configuration'''
-    LEN_AREA    = 20
+
+def calc_params(x_min, x_max, y_min, y_max,xx, yy, t_x, t_y, dcor,std, ptx, eta):
+    
+    cov     = gen_varcov_matrix(xx.flatten(), yy.flatten(), dcor, std)
+    z       = gen_multivariate_normal(cov)  #correlated shadowing vector[dB]
+    d = distance( t_x, t_y, xx.flatten(), yy.flatten())
+    l       = pathloss(d, ETA)              #[dB]
+    prx     = PTX - l + z                   #received signal power [dBm]
+    return prx
+
+
+def generate_map(x_min, x_max, y_min, y_max, t_x =-0.3, t_y = 10, dcor=0.8, std=4.7, ptx=23, eta=1.5):
+
+    xx, yy = create_grid(x_min, x_max, y_min, y_max)
+    
+    prx = calc_params(x_min, x_max, y_min, y_max,xx,yy, t_x, t_y, dcor,std, ptx, eta)
+    xx, yy = xx*100, yy*100
+    map = pd.DataFrame({'x':list(xx.flatten()), 'y':list(yy.flatten()), 'z':prx})     
+    map = map.sort_values(by=['x','y'])  
+    return map
+    
+if __name__ == "__main__":
+    
+    
+    
+    # Global constants
+    X_MIN = 0
+    X_MAX = 92
+    Y_MIN= 0
+    Y_MAX = 20
+    
     DCOR        = 0.8 # 20.0      #correlation distance [m]
     STDEV       = 4.7             #standard deviation
-    TX_X        = -0.3            #x coordinate of transmitter
-    TX_Y        = 0.5 * LEN_AREA  #y coordinate of transmitter
+    T_X        = -0.3            #x coordinate of transmitter
+    T_Y        = 10 #y coordinate of transmitter
     PTX         = 23.0            #transmission power [dBm]
     ETA         = 1.5             #path loss index
-
- 
     
-    '''get measurement dataset'''
-    x_min = 0
-    x_max = 91 
-    num_vals_x = 92
-    
-    y_min = 0
-    
-    
-    for i in range(5):
-        
-        y_max = y_min + 400
-
-        x = [x/100 for x in range(x_min,x_max+1)]#np.linspace(0, LEN_AREA, N)
-        y = [y/100 for y in range(y_min,y_max+1)]#np.linspace(0, LEN_AREA, N)
-        
-        xx, yy = np.meshgrid(x, y)
-        
-        print(f"creating map for y_min : {y_min} cm and y_max : {y_max} cm _> results in : grid shape : ", xx.shape)
-        
-        
-        cov     = gen_varcov_matrix(xx.flatten(), yy.flatten(), DCOR, STDEV)
-
-        z       = gen_multivariate_normal(cov)  #correlated shadowing vector[dB]
-
-        d       = distance(TX_X, TX_Y, xx.flatten(), yy.flatten())
-        l       = pathloss(d, ETA)              #[dB]
-        prx     = PTX - l + z                   #received signal power [dBm]
-
-    
-        
-        
-        
-        stackedmap = pd.DataFrame({'x':list(xx.flatten()), 'y':list(yy.flatten()), 'z':prx})
-        
-        
-     
-        stackedmap = stackedmap.sort_values(by=['x','y'])
-        
-        stackedmap.to_csv(f'virtualmainmap_{y_min}_to_{y_max}.csv')
-        print(f"virtual main map saved to virtualmainmap_{y_min}_to_{y_max}.csv")
-        y_min = y_max + 1
+    map = generate_map(X_MIN, X_MAX, Y_MIN, Y_MAX)
+    map.to_csv('synmap_test.csv')
