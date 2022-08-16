@@ -10,10 +10,11 @@ import radiomap_construction as rmc
 
 
 
-def radius_dependent_variance(map, radius, random_points_to_check):
-    
-    ys_cm = np.arange(map.shape[0])
-    xs_cm = np.arange(map.shape[1])
+
+def radius_dependent_variance(map_cm, radius, random_points_to_check):
+
+    ys_cm = np.arange(map_cm.shape[0])
+    xs_cm = np.arange(map_cm.shape[1])
 
     Xs_cm, Ys_cm = np.meshgrid(xs_cm, ys_cm)
 
@@ -26,11 +27,11 @@ def radius_dependent_variance(map, radius, random_points_to_check):
     data[:, 2] = np.nan
 
     counter = 0
-    for row_index in range(map.shape[0]):
+    for row_index in range(map_cm.shape[0]):
 
-        for col_index in range(map.shape[1]):
+        for col_index in range(map_cm.shape[1]):
 
-            data[counter, 2] = map[row_index, col_index]
+            data[counter, 2] = map_cm[row_index, col_index]
             counter += 1
 
     # dummy preparation
@@ -49,8 +50,10 @@ def radius_dependent_variance(map, radius, random_points_to_check):
             print(counter)
 
         current_power = data[data_sample, 2]
-        relevant_samples = data[np.array(np.linalg.norm(data[:, 0:2] - data[data_sample, 0:2], 2, 1) > (radius - 0.5)) &
-                                np.array(np.linalg.norm(data[:, 0:2] - data[data_sample, 0:2], 2, 1) < (radius + 0.5)),
+        differences = data[:, 0:2] - data[data_sample, 0:2]
+        distance_vector = np.sqrt(np.sum(np.square(differences), axis=1))
+        relevant_samples = data[np.array(distance_vector > (radius - 0.5)) &
+                                np.array(distance_vector < (radius + 0.5)),
                                 2]
 
         power_differences = relevant_samples - current_power
@@ -58,7 +61,7 @@ def radius_dependent_variance(map, radius, random_points_to_check):
             power_differences
         current_sort_in_counter = current_sort_in_counter + power_differences.size
 
-
+    test = 0
     return power_diffferences_collection[~np.isnan(power_diffferences_collection)]
 
 
@@ -89,7 +92,7 @@ def main(dcor):
     pdc_syn = np.concatenate(pdc_syn_dcor)
     np.save(f'pdc_syn_{dcor}.npy', np.array(pdc_syn))
     pdc_ref = np.concatenate( pdc_ref_dcor)
-    np.save('pdc_ref.npy', np.array(pdc_ref))
+    np.save('pdc_ref_{dcor}.npy', np.array(pdc_ref))
 
 
 if __name__ == "__main__":
