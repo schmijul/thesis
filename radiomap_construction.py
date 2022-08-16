@@ -116,7 +116,7 @@ def calc_params(x_min, x_max, y_min, y_max,xx, yy, t_x, t_y, dcor,std, ptx, eta)
     cov     = gen_varcov_matrix(xx.flatten(), yy.flatten(), dcor, std)
     z       = gen_multivariate_normal(cov)  #correlated shadowing vector[dB]
     d = distance( t_x, t_y, xx.flatten(), yy.flatten())
-    l       = pathloss(d, ETA)              #[dB]
+    l       = pathloss(d, eta)              #[dB]
     prx     = PTX - l + z                   #received signal power [dBm]
     return prx
 
