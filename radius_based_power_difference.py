@@ -2,6 +2,7 @@
 import os
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
 import datapreparation as dp
 import radiomap_construction as rmc
 
@@ -73,24 +74,33 @@ def get_pdc_per_slice(x_min, x_max, y_min, slicesize,  radius, random_points_to_
         print(y_min, y_max)
         print
         map = rmc.generate_map(x_min, x_max, y_min, y_max, dcor=dcor)
-        refernce_map = dp.preparemap(pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map.csv').iloc[y_min:y_max])[1]
+        reference_map = dp.preparemap(pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map.csv').iloc[y_min:y_max])[1]
         pdc_syn.append(radius_dependent_variance(map.to_numpy(), radius, random_points_to_check))
-        pdc_ref.append(radius_dependent_variance(refernce_map.to_numpy(), radius, random_points_to_check))
+        pdc_ref.append(radius_dependent_variance(reference_map.to_numpy(), radius, random_points_to_check))
         y_min = y_max +1
     return pdc_syn, pdc_ref
 
-if __name__ == "__main__":
-    
+def main(dcor):
     X_MIN = 0
     X_MAX = 91
     Y_MIN = 0
+    pdc_syn_dcor, pdc_ref_dcor = get_pdc_per_slice(X_MIN, X_MAX, Y_MIN, 400,10, 400, dcor)
+
+    pdc_syn = np.concatenate(pdc_syn_dcor)
+    np.save(f'pdc_syn_{dcor}.npy', np.array(pdc_syn))
+    pdc_ref = np.concatenate( pdc_ref_dcor)
+    np.save('pdc_ref.npy', np.array(pdc_ref))
+
+
+if __name__ == "__main__":
     
+
+
+
+
+
+    pool = mp.Pool()
     
  
-    for dcor in [x/100 for x in range(1,300,10)]:
-        pdc_syn_dcor, pdc_ref_dcor = get_pdc_per_slice(X_MIN, X_MAX, Y_MIN, 400, dcor, 400, dcor)
-        pdc_syn = np.concatenate((pdc_syn, pdc_syn_dcor))
-        
-        np.save(f'pdc_syn_{dcor}.npy', np.array(pdc_syn))
-        pdc_ref = np.concatenate((pdc_ref, pdc_ref_dcor))
-        np.save('pdc_ref.npy', np.array(pdc_ref))
+
+    pool.map(main,[dcor/100 for dcor in range(1,50,10)])
