@@ -128,10 +128,9 @@ if __name__ == '__main__':
     LENGTH = None
     VERBOSE = 0
 
-
     for random in [0]:
         for samplingdistance in range(20,4,-4):
 
             print(f"random: {random}, samplingdistance: {samplingdistance}")
-            scenario = f'Main_Straight_SISO_Power_Map_samplingDistance-{samplingdistance}-random-{random}_notnormalized'
+            scenario = f'NeuronOverKill_dist-{samplingdistance}-random-{random}_notnormalized'
             main()

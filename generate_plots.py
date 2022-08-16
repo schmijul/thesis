@@ -29,7 +29,7 @@ def load_dkmodel(dist,samplingorder='uniform'):
     Returns:
         prediction ([pd.DataFrame])
     """
-    prediction = loadmat(f'dkmodel_predictions/predictions/dkmodel_dist_{dist}_{samplingorder}_predictions.mat')
+    prediction = loadmat(f'dkmodel_predictions/dkmodel_dist_{dist}_{samplingorder}_predictions_highNeuron.mat')
     prediction = pd.DataFrame(prediction['predictions'])
     prediction.columns = ['x', 'y', 'z']
     return prediction
@@ -67,12 +67,11 @@ def main():
 
     # Load original map
     originalmap = dp.preparemap(pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map.csv'))[1]
-    knownpoints = pd.read_csv(f'dk_data/dist-{DIST}_{SAMPLINGORDER}/trainset.csv')[['x', 'y','z']]
-    unknownpoints = pd.read_csv(f'dk_data/dist-{DIST}_{SAMPLINGORDER}/valset.csv')[['x', 'y','z']]
+    knownpoints = pd.read_csv(f'dk_data/trainset/dist-{DIST}_{SAMPLINGORDER}.csv')[['x', 'y','z']]
+    unknownpoints = pd.read_csv(f'dk_data/valset/dist-{DIST}_{SAMPLINGORDER}.csv')[['x', 'y','z']]
 
     results = {'lininterpolation': load_lininterpolationresults(DIST,samplingorder=SAMPLINGORDER),
                'kriging': load_krigingresults(DIST,samplingorder=SAMPLINGORDER),
-               'basemodel': load_basemodelprediction(DIST,samplingorder=SAMPLINGORDER),
                'dkmodel': load_dkmodel(DIST,samplingorder=SAMPLINGORDER)}
 
     path = f'results/plots/interpolate_wholemap/main_straigh_siso/dist-{DIST}_samplingorder-{SAMPLINGORDER}'
@@ -105,6 +104,6 @@ def main():
 
 if __name__ == '__main__':
 
-    for DIST in [4, 8, 12, 16]:
+    for DIST in [ 12, 16]:
         for SAMPLINGORDER in ['random']:
              main()

@@ -73,7 +73,7 @@ def get_pdc_per_slice(x_min, x_max, y_min, slicesize,  radius, random_points_to_
         print(y_min, y_max)
         print
         map = rmc.generate_map(x_min, x_max, y_min, y_max, dcor=dcor)
-        refernce_map = dp.preparemap(pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map.csv').iloc[y_min:y_max])
+        refernce_map = dp.preparemap(pd.read_csv('RadioEnvMaps/Main_Straight_SISO_Power_Map.csv').iloc[y_min:y_max])[1]
         pdc_syn.append(radius_dependent_variance(map.to_numpy(), radius, random_points_to_check))
         pdc_ref.append(radius_dependent_variance(refernce_map.to_numpy(), radius, random_points_to_check))
         y_min = y_max +1

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def singleheatmap(data, wholemap, known_points, unknown_points,
+def singleheatmap(data, wholemap, unknown_points,
                   maxvalue, minvalue, figsize=(12,8), cmap='viridis'):
     """
     _summary_
@@ -32,7 +32,7 @@ def singleheatmap(data, wholemap, known_points, unknown_points,
                 vmax=maxvalue,
                 cmap=cmap)
 
-    ax_1.plot(known_points['x'], known_points['y'], 'k.', ms=1)
+    #ax_1.plot(known_points['x'], known_points['y'], 'k.', ms=1)
 
     ax_1.set_title('whole_map with known points marked')
 

@@ -28,18 +28,18 @@ def build_model(input_dim, verbose=False):
     """
 
     model = Sequential()
-    model.add(Dense(100,
+    model.add(Dense(1000,
                     input_dim = input_dim,
                     kernel_initializer='he_uniform',
                     activation='relu'))
     model.add(Dropout(rate=0.5))
     model.add(BatchNormalization())
-    model.add(Dense(100, activation='relu'))
+    model.add(Dense(2500, activation='relu'))
     model.add(Dropout(rate=0.5))
-    model.add(Dense(100, activation='relu'))
+    model.add(Dense(2500, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dropout(rate=0.5))
-    model.add(Dense(100, activation='relu'))
+    model.add(Dense(2500, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dense(1, activation='linear'))
 
