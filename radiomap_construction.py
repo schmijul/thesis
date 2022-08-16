@@ -117,7 +117,7 @@ def calc_params(x_min, x_max, y_min, y_max,xx, yy, t_x, t_y, dcor,std, ptx, eta)
     z       = gen_multivariate_normal(cov)  #correlated shadowing vector[dB]
     d = distance( t_x, t_y, xx.flatten(), yy.flatten())
     l       = pathloss(d, eta)              #[dB]
-    prx     = PTX - l + z                   #received signal power [dBm]
+    prx     = ptx - l + z                   #received signal power [dBm]
     return prx
 
 
@@ -141,12 +141,7 @@ if __name__ == "__main__":
     Y_MIN= 0
     Y_MAX = 20
     
-    DCOR        = 0.8 # 20.0      #correlation distance [m]
-    STDEV       = 4.7             #standard deviation
-    T_X        = -0.3            #x coordinate of transmitter
-    T_Y        = 10 #y coordinate of transmitter
-    PTX         = 23.0            #transmission power [dBm]
-    ETA         = 1.5             #path loss index
+
     
     map = generate_map(X_MIN, X_MAX, Y_MIN, Y_MAX)
     map.to_csv('synmap_test.csv')

@@ -132,9 +132,15 @@ dmypy.json
 
 
 *.png
-
+*.npy
 *.h5
-
+*.pyx
 *.csv
 *.mat
+*.v2
+*.gz
+interpolationresults/*
 history*
+*.onnx
+*-empty
+*.json
